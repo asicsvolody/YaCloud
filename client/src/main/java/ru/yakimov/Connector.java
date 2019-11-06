@@ -38,7 +38,7 @@ public class Connector {
 
     private static Connector instance;
 
-    private CountDownLatch countDownLatch = new CountDownLatch(1);
+//    private CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private Controller controller;
     private VerificationController verificationController;
@@ -137,7 +137,7 @@ public class Connector {
                 channel = getValue();
                 connected.set(true);
 
-                countDownLatch.countDown();
+//                countDownLatch.countDown();
 
             }
 
@@ -161,18 +161,17 @@ public class Connector {
         new Thread(task).start();
     }
 
-    @FXML
     public void send() {
         if(!connected.get()) {
             connect();
 
         }
-        try {
-            countDownLatch.await();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            countDownLatch.await();
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
 
@@ -184,6 +183,9 @@ public class Connector {
             @Override
             protected Void call() throws Exception {
 
+                while(channel == null){
+                    Thread.sleep(500);
+                }
 
                 ChannelFuture f = channel.writeAndFlush(dataForSend);
                 f.sync();
@@ -208,7 +210,11 @@ public class Connector {
 
             }
 
+
+
         };
+
+
 
 
 

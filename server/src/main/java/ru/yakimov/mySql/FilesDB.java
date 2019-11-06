@@ -77,29 +77,6 @@ public class FilesDB {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-//        try(PreparedStatement ps = connection.prepareStatement("SELECT unit_is_file,unit_name,unit_ext,unit_size,unit_date FROM yaCloudDB. WHERE unit_parent=?")) {
-//            ps.setString(1, login);
-//            ps.setString(2, dir);
-//            ResultSet rs = ps.executeQuery();
-//
-//            List<String> resArr = new ArrayList<>();
-//
-//            while(rs.next()){
-//                resArr.add(new StringBuilder(rs.getString(1)).append(" ")
-//                        .append(rs.getString(2)).append(" ")
-//                        .append(rs.getString(3)).append(" ")
-//                        .append(rs.getString(4)).append(" ")
-//                        .append(rs.getString(5)).toString()
-//                );
-//            }
-//            rs.close();
-//
-//            return resArr;
-//
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
         return null;
     }
 

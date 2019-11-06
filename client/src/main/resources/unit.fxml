@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.HBox?>
+<HBox fx:id="hbPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+      prefHeight="64.0" prefWidth="300.0" stylesheets="@css/PersonListCellStyle.css" xmlns="http://javafx.com/javafx/8.0.111"
+      xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <ImageView fx:id="imgStyle" >
+            <Image url="@img/file.png"/>
+        </ImageView>
+        <Label fx:id="unitName" prefHeight="30.0" prefWidth="187.0" text="Label" textAlignment="CENTER">
+            <font>
+                <Font name="Arial Bold" size="18.0"/>
+            </font>
+        </Label>
+        <Label fx:id="unitExt" prefHeight="30.0" prefWidth="30.0" text="Label" textAlignment="CENTER">
+            <font>
+                <Font name="Arial Bold" size="18.0"/>
+            </font>
+        </Label>
+        <Label fx:id="unitSize" prefHeight="30.0" prefWidth="50.0" text="Label" textAlignment="CENTER">
+            <font>
+                <Font name="Arial Bold" size="18.0"/>
+            </font>
+        </Label>
+        <Label fx:id="unitDate" prefHeight="30.0" prefWidth="50.0" alignment="TOP_LEFT" text="Label" wrapText="true" VBox.vgrow="ALWAYS">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+    </children>
+</HBox>

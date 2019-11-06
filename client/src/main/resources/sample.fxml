@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.ListView?>
+<VBox prefHeight="640.0" prefWidth="618.0" xmlns="http://javafx.com/javafx/8.0.211" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.yakimov.Controller">
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="File">
+          <items>
+            <MenuItem mnemonicParsing="false" text="New" />
+            <MenuItem mnemonicParsing="false" text="Open…" />
+            <Menu mnemonicParsing="false" text="Open Recent" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Close" />
+            <MenuItem mnemonicParsing="false" text="Save" />
+            <MenuItem mnemonicParsing="false" text="Save As…" />
+            <MenuItem mnemonicParsing="false" text="Revert" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Preferences…" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Quit" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+            <MenuItem mnemonicParsing="false" text="Undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Cut" />
+            <MenuItem mnemonicParsing="false" text="Copy" />
+            <MenuItem mnemonicParsing="false" text="Paste" />
+            <MenuItem mnemonicParsing="false" text="Delete" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Select All" />
+            <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+      <VBox prefHeight="617.0" prefWidth="618.0">
+         <children>
+            <ToolBar prefHeight="40.0" prefWidth="200.0">
+              <items>
+                <Button fx:id="refresh" mnemonicParsing="false" onAction="#refresh" >
+                     <cursor>
+                        <Cursor fx:constant="DEFAULT" />
+                     </cursor>
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/refresh.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                    <tooltip>
+                        <Tooltip text="REFRESH" />
+                    </tooltip>
+
+                </Button>
+                  <Button fx:id="load" mnemonicParsing="false" onAction="#load">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/load.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="LOAD" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="upload" mnemonicParsing="false" onAction="#upload">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/upload.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="UPLOAD" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="newFolder" mnemonicParsing="false" onAction="#newFolder">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/newFolder.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="NEW FOLDER" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="rename" mnemonicParsing="false" onAction="#rename">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/rename.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="RENAME" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="refresh22" mnemonicParsing="false" onAction="#refresh">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/download.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="unuse" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="refresh21" mnemonicParsing="false" onAction="#refresh">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/connected.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="unuse" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="delete" mnemonicParsing="false" onAction="#delete">
+                     <cursor>
+                        <Cursor fx:constant="DEFAULT" />
+                     </cursor>
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/delete.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="DELETE" />
+                      </tooltip>
+                  </Button>
+                  <Button fx:id="setting" mnemonicParsing="false" onAction="#setting">
+                     <graphic>
+                        <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="img/tools.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                      <tooltip>
+                          <Tooltip text="SETTING" />
+                      </tooltip>
+                  </Button>
+              </items>
+            </ToolBar>
+            <VBox prefHeight="520.0" prefWidth="618.0">
+               <children>
+                  <HBox prefHeight="23.0" prefWidth="618.0">
+                     <children>
+                        <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="272.0" text="name" onAction="#sortName"/>
+                        <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="73.0" text="ext" onAction="#sortExt"/>
+                        <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="130.0" text="size" onAction="#sortSize"/>
+                        <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="144.0" text="date" onAction="#sortDate"/>
+                     </children>
+                  </HBox>
+                   <ListView fx:id="unitListView" VBox.vgrow="ALWAYS"/>
+               </children>
+            </VBox>
+            <TextField fx:id="path" onAction="#goToPath" text="root/"/>
+         </children>
+      </VBox>
+  </children>
+</VBox>

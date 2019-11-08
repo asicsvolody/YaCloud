@@ -18,13 +18,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import ru.yakimov.handlers.InProtocolHandler;
 import ru.yakimov.handlers.OutProtocolHandler;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class Connector {

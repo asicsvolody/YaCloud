@@ -78,15 +78,19 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         if(FilesDB.getInstance().deleteUnit(login, fileName, fileExt, parentDir)){
             sendUnits(parentDir);
         }else{
-            YaCloudUtils.writeToArrBack(dataObjArr, Commands.ERROR,
-                    String.format("File %s.%s not found in directory %s",fileName,fileExt,parentDir));
+            writeError(String.format("File %s.%s not found in directory %s",fileName,fileExt,parentDir));
         }
     }
 
+    public void writeError(String msg){
+        YaCloudUtils.writeToArrBack(dataObjArr, Commands.ERROR, msg);
+    }
 
-    public void sendUnits(String data) {
+
+
+    public void sendUnits(String parentDir) {
         try {
-            String unitsData = String.join(InProtocolHandler.UNITS_DELIMETER, FilesDB.getInstance().getUnitsFromDir(login, data ));
+            String unitsData = String.join(InProtocolHandler.UNITS_DELIMETER, FilesDB.getInstance().getUnitsFromDir(login, parentDir ));
             YaCloudUtils.writeToArrBack(dataObjArr, Commands.GO_TO_DIR, unitsData);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -104,20 +108,23 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
             return;
         String parentDir = dataArr[0].trim();
         String newFolderName = dataArr[1].trim();
-        if(FilesDB.getInstance().addUnit(
-                login
-                , newFolderName
-                , " "
-                , parentDir
-                , false
-                , parentDir+newFolderName+"/"
-                , 0L)){
+        if(addUnit(newFolderName, " ", parentDir, false, parentDir+newFolderName+"/", 0L)){
             sendUnits(parentDir);
         }else{
-            YaCloudUtils.writeToArrBack(dataObjArr, Commands.ERROR, "WRONG NEW FOLDER NAME");
+            writeError("WRONG NEW FOLDER NAME");
         }
     }
 
+    public boolean addUnit(String name, String ext, String parentDir, boolean isFile, String path, long size) throws SQLException {
+        return FilesDB.getInstance().addUnit(
+                login
+                , name
+                , ext
+                , parentDir
+                , isFile
+                , path
+                , size);
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

@@ -9,7 +9,8 @@ package ru.yakimov;
 public enum Commands {
     REFRESH("refresh"), NEW_FOLDER("addDir"), GO_TO_DIR("goToDir")
     , DOWNLOAD_FILE("downloadFile"), AUTH("auth"), REG("reg")
-    , DELETE("delete")
+    , DELETE("delete"), START_FILE("startFile"), END_FILE("endFile")
+    , FILE("file")
     , AUTH_OK("authOk"), REG_OK("regOk"), AUTH_ERROR("authError")
     , REG_ERROR("regError"), SAVE_LOGIN("saveLogin"), ERROR("error");
 
@@ -50,6 +51,16 @@ public enum Commands {
             return SAVE_LOGIN;
         if(command.equals("error"))
             return ERROR;
+        if(command.equals("startFile"))
+            return START_FILE;
+        if(command.equals("endFile"))
+            return END_FILE;
+        if(command.equals("file"))
+            return FILE;
         return null;
+    }
+
+    public static Commands getCommand(byte[] commandArr){
+       return getCommand(new String(commandArr));
     }
 }

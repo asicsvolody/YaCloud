@@ -21,30 +21,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import ru.yakimov.handlers.InProtocolHandler;
 import ru.yakimov.handlers.OutProtocolHandler;
-import ru.yakimov.handlers.ProtocolDataType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 
 public class Connector {
 
-    private static int windowWeight = 618;
-    private static int windowHeight = 640;
-
     private static Connector instance;
-
-//    private CountDownLatch countDownLatch = new CountDownLatch(1);
-
-    private Controller controller;
-    private VerificationController verificationController;
-
-    private Scene sampleScene;
-    private Scene verificationScene;
 
     private BooleanProperty connected = new SimpleBooleanProperty(false);
     private Channel channel;
@@ -65,26 +50,6 @@ public class Connector {
         return  localInstance;
     }
 
-    private Connector() {
-
-        try {
-
-            FXMLLoader sampleLoader = new FXMLLoader();
-            Parent sampleRoot = sampleLoader.load(getClass().getResourceAsStream("/sample.fxml"));
-            sampleScene = new Scene(sampleRoot, windowWeight, windowHeight);
-            controller = sampleLoader.getController();
-
-            FXMLLoader loginLoader = new FXMLLoader();
-            Parent loginRoot = loginLoader.load(getClass().getResourceAsStream("/login.fxml"));
-            verificationScene = new Scene(loginRoot, windowWeight, windowHeight);
-            verificationController = loginLoader.getController();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-    }
 
     public void connect() {
 
@@ -145,12 +110,7 @@ public class Connector {
             protected void failed() {
 
                 Throwable exc = getException();
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Client");
-                alert.setHeaderText( exc.getClass().getName() );
-                alert.setContentText( exc.getMessage() );
-                alert.showAndWait();
-
+                SceneAssets.getInstance().getController().showAlertError(exc.getClass().getName() ,  exc.getMessage());
                 connected.set(false);
 
                 exc.printStackTrace();
@@ -164,14 +124,8 @@ public class Connector {
     public void send() {
         if(!connected.get()) {
             connect();
-
         }
-//        try {
-//            countDownLatch.await();
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+
 
 
 
@@ -196,28 +150,13 @@ public class Connector {
 
             @Override
             protected void failed() {
-
                 Throwable exc = getException();
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Client");
-                alert.setHeaderText( exc.getClass().getName() );
-                alert.setContentText( exc.getMessage() );
-                alert.showAndWait();
-
+                SceneAssets.getInstance().getController().showAlertError(exc.getClass().getName() ,  exc.getMessage());
                 connected.set(false);
 
                 exc.printStackTrace();
-
             }
-
-
-
         };
-
-
-
-
-
         new Thread(task).start();
     }
 
@@ -256,19 +195,10 @@ public class Connector {
 
             @Override
             protected void failed() {
-
                 connected.set(false);
-
-                Throwable t = getException();
-
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Client");
-                alert.setHeaderText( t.getClass().getName() );
-                alert.setContentText( t.getMessage() );
-                alert.showAndWait();
-
-                t.printStackTrace();
-
+                Throwable exc = getException();
+                SceneAssets.getInstance().getController().showAlertError(exc.getClass().getName() ,  exc.getMessage());
+                exc.printStackTrace();
             }
 
         };
@@ -291,27 +221,12 @@ public class Connector {
 
     }
 
-    public Controller getController() {
-        return controller;
+
+
+
+    public void setAndSendCommand(Commands command, byte[] dataArr){
+        setProtocol(ProtocolDataType.COMMAND, command.getString().getBytes(), dataArr);
+        send();
     }
 
-    public VerificationController getVerificationController() {
-        return verificationController;
-    }
-
-    public Scene getSampleScene() {
-        return sampleScene;
-    }
-
-    public Scene getVerificationScene() {
-        return verificationScene;
-    }
-
-    public void setVerificationController(VerificationController verificationController) {
-        this.verificationController = verificationController;
-    }
-
-    public void setVerificationScene(Scene verificationScene) {
-        this.verificationScene = verificationScene;
-    }
 }

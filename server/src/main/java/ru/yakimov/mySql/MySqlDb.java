@@ -10,7 +10,7 @@ import java.sql.*;
 
 public class MySqlDb {
 
-    private final String JDBC = "com.mysql.jdbc.Driver";
+    private final String JDBC = "com.mysql.cj.jdbc.Driver";
 
     private Connection conn;
 

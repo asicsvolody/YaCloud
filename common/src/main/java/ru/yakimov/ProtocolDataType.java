@@ -4,7 +4,7 @@
  * E-mail: yakimovvn@bk.ru
  */
 
-package ru.yakimov.handlers;
+package ru.yakimov;
 
 
 public enum ProtocolDataType {
@@ -17,7 +17,7 @@ public enum ProtocolDataType {
         this.firstMessageByte = firstMessageByte;
     }
 
-    static ProtocolDataType getDataTypeFromByte(byte b) {
+    public static ProtocolDataType getDataTypeFromByte(byte b) {
         if (b == FILE.firstMessageByte) {
             return FILE;
         }

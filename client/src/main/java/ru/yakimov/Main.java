@@ -16,7 +16,7 @@ public class Main extends Application {
 
 
         primaryStage.setTitle("yaCloud");
-        primaryStage.setScene(Connector.getInstance().getVerificationScene());
+        primaryStage.setScene(SceneAssets.getInstance().getVerificationScene());
         primaryStage.setResizable(false);
         primaryStage.show();
         primaryStage.setOnCloseRequest(windowEVENT ->{

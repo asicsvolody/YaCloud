@@ -9,8 +9,14 @@ package ru.yakimov.handlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import ru.yakimov.IndexProtocol;
+import ru.yakimov.ProtocolDataType;
 
 public class InProtocolHandler extends ChannelInboundHandlerAdapter {
+
+    public static final String UNITS_DELIMETER = "//%//";
+    public static final String DATA_DELIMITER = " ";
+    public static final String ROOT_DIR = "root/";
 
 
     private int state = -1;
@@ -29,25 +35,24 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
         System.out.println("Получен буфер");
         ByteBuf buf = ((ByteBuf) msg);
 
-
         if (state == -1) {
             byte firstByte = buf.readByte();
             type = ProtocolDataType.getDataTypeFromByte(firstByte);
 
             if(type.equals(ProtocolDataType.EMPTY))
                 return;
-            outArr[0]= type;
+            outArr[IndexProtocol.TYPE.getInt()]= type;
             state = 0;
             reqLen = 4;
-
-            System.out.println(type.getFirstMessageByte());
         }
+
+
         if(state == 0){
             if (buf.readableBytes() < reqLen) {
                 return;
             }
             reqLen = buf.readInt();
-            outArr[1] = reqLen;
+            outArr[IndexProtocol.COMMAND_LENGTH.getInt()] = reqLen;
             state = 1;
 
             System.out.println(reqLen);
@@ -60,15 +65,18 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             }
             byte[] info = new byte[reqLen];
             buf.readBytes(info);
-            outArr[2] = info;
+            outArr[IndexProtocol.COMMAND.getInt()] = info;
             state = 2;
-
+            reqLen = 4;
             System.out.println(new String(info));
         }
 
         if (state == 2) {
+            if (buf.readableBytes() < reqLen) {
+                return;
+            }
             reqLen = buf.readInt();
-            outArr[3] = reqLen;
+            outArr[IndexProtocol.DATA_LENGTH.getInt()] = reqLen;
             state = 3;
 
             System.out.println(reqLen);
@@ -81,14 +89,17 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             }
             byte[] data = new byte[reqLen];
             buf.readBytes(data);
-            outArr[4] = data;
+            outArr[IndexProtocol.DATA.getInt()] = data;
+
             ctx.fireChannelRead(outArr);
-            buf.release();
+
             state = -1;
 
             System.out.println(new String(data));
 
         }
+
+        buf.release();
 
     }
 

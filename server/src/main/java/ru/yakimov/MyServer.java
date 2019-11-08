@@ -8,9 +8,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import ru.yakimov.handlers.InProtocolHandler;
-import ru.yakimov.handlers.OutProtocolHandler;
-import ru.yakimov.handlers.VerificationHandler;
+import ru.yakimov.handlers.*;
 
 /**
  * Created by IntelliJ Idea.
@@ -29,7 +27,7 @@ public class MyServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new OutProtocolHandler(), new InProtocolHandler(),new VerificationHandler());
+                            ch.pipeline().addLast(new OutProtocolHandler(), new InProtocolHandler(),new VerificationHandler(), new CommandHandler(), new FileUnloadHandler());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true);

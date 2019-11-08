@@ -62,6 +62,7 @@ public class FilesDB {
         try(Statement stmt = connection.createStatement()){
             ResultSet rs = stmt.executeQuery(String.format("SELECT unit_is_file,unit_name,unit_ext,unit_size,unit_date FROM yaCloudDB.%s WHERE unit_parent='%s'", login, dir));
             List<String> resArr = new ArrayList<>();
+            resArr.add(dir);
 
             while(rs.next()){
                 resArr.add(new StringBuilder(rs.getString(1)).append(" ")
@@ -80,19 +81,34 @@ public class FilesDB {
         return null;
     }
 
+    public boolean deleteUnit(String login, String unitName,String ext, String unitParent) throws SQLException {
+        try(PreparedStatement ps = connection.prepareStatement(
+                String.format("DELETE FROM yaCloudDB.%s WHERE unit_name=? AND unit_parent=? AND unit_ext=?",login)
+        )) {
+            ps.setString(1, unitName);
+            ps.setString(2, unitParent);
+            ps.setString(3, ext);
+            System.out.println(ps);
+
+            System.out.println(ps.toString());
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+
+
     public boolean addUnit(String login, String unitName, String unitExt, String unitParent, Boolean isFile, String unitPath, Long unitSize) throws SQLException {
         try(PreparedStatement ps = connection.prepareStatement(
-                "INSERT INTO ? (unit_name, unit_ext, unit_parent, unit_is_file, unit_path, unit_size) " +
-                        "VALUES (?,?,?,?,?,?);"
+                String.format("INSERT INTO yaCloudDB.%s (unit_name,unit_ext,unit_parent,unit_is_file, unit_path, unit_size) VALUES (?,?,?,?,?,?)",login)
         )) {
-            ps.setString(1, login);
-            ps.setString(2, unitName);
-            ps.setString(3, unitExt);
-            ps.setString(4, unitParent);
-            ps.setBoolean(5, isFile);
-            ps.setString(6, unitPath);
-            ps.setLong(7, unitSize);
-            return ps.execute();
+            ps.setString(1, unitName);
+            ps.setString(2, unitExt);
+            ps.setString(3, unitParent);
+            ps.setBoolean(4, isFile);
+            ps.setString(5, unitPath);
+            ps.setLong(6, unitSize);
+            System.out.println(ps.toString());
+            return ps.executeUpdate() == 1;
         }
     }
 }

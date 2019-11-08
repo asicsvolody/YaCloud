@@ -33,8 +33,8 @@ public class VerificationController {
         this.isAuthorisation = isAuthorisation;
         if(isAuthorisation){
             Platform.runLater(this::showMainScene);
-            String [] unitsDataArr = msg.split("//");
-            Connector.getInstance().getController().initializeUnitListView(unitsDataArr);
+            String [] unitsDataArr = msg.split("//%//");
+            SceneAssets.getInstance().getController().initializeUnitListView(unitsDataArr);
         }else{
             Platform.runLater(()-> loginMsg.setText(msg));
 
@@ -49,15 +49,13 @@ public class VerificationController {
     @FXML
     private void login() {
         Connector connector = Connector.getInstance();
-
         connector.setCommandProtocol("auth", login.getText() + " " + password.getText());
         connector.send();
     }
 
     private void showMainScene() {
-        Connector connector = Connector.getInstance();
 
-        ((Stage) password.getScene().getWindow()).setScene(connector.getSampleScene());
+        ((Stage) password.getScene().getWindow()).setScene(SceneAssets.getInstance().getSampleScene());
     }
 
 }

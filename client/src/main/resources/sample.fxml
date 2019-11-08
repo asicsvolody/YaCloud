@@ -61,7 +61,7 @@
          <children>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button fx:id="refresh" mnemonicParsing="false" onAction="#refresh" >
+                <Button fx:id="refresh" mnemonicParsing="false" onAction="#goTo" >
                      <cursor>
                         <Cursor fx:constant="DEFAULT" />
                      </cursor>
@@ -125,7 +125,7 @@
                           <Tooltip text="RENAME" />
                       </tooltip>
                   </Button>
-                  <Button fx:id="refresh22" mnemonicParsing="false" onAction="#refresh">
+                  <Button fx:id="refresh22" mnemonicParsing="false" onAction="#setting">
                      <graphic>
                         <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -137,7 +137,7 @@
                           <Tooltip text="unuse" />
                       </tooltip>
                   </Button>
-                  <Button fx:id="refresh21" mnemonicParsing="false" onAction="#refresh">
+                  <Button fx:id="refresh21" mnemonicParsing="false" onAction="#setting">
                      <graphic>
                         <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -188,10 +188,10 @@
                         <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="144.0" text="date" onAction="#sortDate"/>
                      </children>
                   </HBox>
-                   <ListView fx:id="unitListView" VBox.vgrow="ALWAYS"/>
+                   <ListView fx:id="unitListView" onMouseClicked="#clickIncite" VBox.vgrow="ALWAYS"/>
                </children>
             </VBox>
-            <TextField fx:id="path" onAction="#goToPath" text="root/"/>
+            <TextField fx:id="path" onAction="#goTo" text="root/"/>
          </children>
       </VBox>
   </children>

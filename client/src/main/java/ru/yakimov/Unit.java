@@ -1,5 +1,7 @@
 package ru.yakimov;
 
+import java.util.Arrays;
+
 /**
  * Created by IntelliJ Idea.
  * User: Якимов В.Н.
@@ -18,13 +20,15 @@ public class Unit {
         }
     }
 
+    private String parenDir;
     private Style style;
     private String name;
     private String ext;
     private String size;
     private String date;
 
-    public Unit(int styleInt, String name, String ext, String size, String date) {
+    public Unit(String parenDir, int styleInt, String name, String ext, String size, String date) {
+        this.parenDir = parenDir;
         this.style = getStyleFromInt(styleInt);
         this.name = name;
         this.ext = ext;
@@ -52,9 +56,18 @@ public class Unit {
         return date;
     }
 
+
     public String getImgFilePath(){
         return "./img/"+style.imgFileName;
     }
+
+    public boolean isDirectory(){
+        return style.equals(Style.FOLDER);
+    }
+    public boolean isBack(){
+        return style.equals(Style.BACK);
+    }
+
 
     public void setStyle(Style style) {
         this.style = style;
@@ -74,6 +87,19 @@ public class Unit {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getPath(){
+        if(isDirectory())
+            return parenDir+name+"/";
+        return parenDir+name+"."+ext;
+    }
+
+    public String getDirBefore(){
+        String[] dirs = parenDir.split("/");
+        if(dirs.length == 1)
+            return parenDir;
+        return String.join("/",Arrays.copyOf(dirs, dirs.length-1))+"/";
     }
 
     private Style getStyleFromInt (int i){

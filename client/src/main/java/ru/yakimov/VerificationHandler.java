@@ -17,9 +17,8 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
     private VerificationController verificationController;
 
     public VerificationHandler() throws IOException {
-        Connector connector = Connector.getInstance();
-        this.controller = connector.getController();
-        this.verificationController = connector.getVerificationController();
+        this.controller = SceneAssets.getInstance().getController();
+        this.verificationController = SceneAssets.getInstance().getVerificationController();
     }
 
     @Override

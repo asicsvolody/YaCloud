@@ -8,8 +8,12 @@ package ru.yakimov.handlers;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import ru.yakimov.Commands;
+import ru.yakimov.IndexProtocol;
+import ru.yakimov.ProtocolDataType;
 import ru.yakimov.mySql.FilesDB;
 import ru.yakimov.mySql.VerificationDB;
+import ru.yakimov.utils.YaCloudUtils;
 
 import java.sql.SQLException;
 
@@ -28,11 +32,11 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         Object[] objArr = ((Object[]) msg);
 
 
-        System.out.println(((ProtocolDataType) objArr[0]).getFirstMessageByte());
-        System.out.println(((int) objArr[1]));
-        System.out.println((new String(((byte[]) objArr[2]))));
-        System.out.println(((int) objArr[3]));
-        System.out.println((new String(((byte[]) objArr[4]))));
+        System.out.println(((ProtocolDataType) objArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
+        System.out.println(((int) objArr[IndexProtocol.COMMAND_LENGTH.getInt()]));
+        System.out.println((new String(((byte[]) objArr[IndexProtocol.COMMAND.getInt()]))));
+        System.out.println(((int) objArr[IndexProtocol.DATA_LENGTH.getInt()]));
+        System.out.println((new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]))));
 
 
 
@@ -44,11 +48,21 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         String data = new String(((byte[]) objArr[4]));
 
 
-        if(command.equals("auth")){
-            authorisation(new String(((byte[]) objArr[4])));
+        if(command.equals(Commands.AUTH.getString())){
+            String[] authData = data.split(InProtocolHandler.DATA_DELIMITER,2);
+            String login = authData[0];
+            String pass = authData[1];
+            authorisation(login, pass);
+            ctx.fireChannelRead(new Object[]{
+                    ProtocolDataType.COMMAND,
+                    Commands.SAVE_LOGIN.getString().length()
+                    ,Commands.SAVE_LOGIN.getString().getBytes()
+                    ,login.length()
+                    ,login.getBytes()
+            });
 
-        }else if(command.equals("reg")){
-            registration(new String(((byte[]) objArr[4])));
+        }else if(command.equals(Commands.REG.getString())){
+            registration(data);
 
         }else{
             arrBack[0] = ProtocolDataType.EMPTY;
@@ -60,45 +74,30 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
             ctx.pipeline().remove(this.getClass());
     }
 
-    private void authorisation(String str) throws SQLException {
-        String[] authData = str.split("\\s",2);
-        String login = authData[0];
-        String pass = authData[1];
+    private void authorisation(String login, String pass) throws SQLException {
+
         if(verificationDB.isUser(login, pass)){
 
-            arrBackFillData("authOk"
-                    , String.join("//", filesDB.getUnitsFromDir(login, "root")));
+            YaCloudUtils.writeToArrBack(arrBack, Commands.AUTH_OK
+                    ,String.join(InProtocolHandler.UNITS_DELIMETER, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)));
 
             isAuthorisation = true;
         }else {
-            arrBackFillData("authError", "There is not this user/password");
+            YaCloudUtils.writeToArrBack(arrBack, Commands.AUTH_ERROR, "There is not this user/password");
         }
     }
 
-    private void arrBackFillData(String command, String data){
-
-        arrBack[0] = ProtocolDataType.COMMAND;
-
-        byte[] commandBack = command.getBytes();
-        arrBack[1] = commandBack.length;
-        arrBack[2] = commandBack;
-
-        byte[] dataBack = data.getBytes();
-        arrBack[3] = dataBack.length;
-        arrBack[4] = dataBack;
-
-    }
 
     private void registration(String str) throws SQLException {
-        String[] authData = str.split("\\s",4);
+        String[] authData = str.split(InProtocolHandler.DATA_DELIMITER,4);
         String login = authData[0];
         String pass = authData[1];
         String eMail = authData[2];
         String controlWord = authData[3];
         if(verificationDB.registration(login,pass,eMail,controlWord)){
-            arrBackFillData("regOk",  "Registration is ok");
+            YaCloudUtils.writeToArrBack(arrBack, Commands.REG_OK,  "Registration is ok");
         }else{
-            arrBackFillData("regError",  "This user exists");
+            YaCloudUtils.writeToArrBack(arrBack, Commands.REG_ERROR,  "This user exists");
         }
     }
 

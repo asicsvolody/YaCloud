@@ -12,6 +12,8 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
+import ru.yakimov.IndexProtocol;
+import ru.yakimov.ProtocolDataType;
 
 
 public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
@@ -27,7 +29,7 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
 
         ByteBufAllocator al = new PooledByteBufAllocator();
         ByteBuf byteBuffer = al.buffer(4);
-        byteBuffer.writeByte(((ProtocolDataType) dataArr[0]).getFirstMessageByte());
+        byteBuffer.writeByte(((ProtocolDataType) dataArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
         ctx.writeAndFlush(byteBuffer);
 
         if(dataType.equals(ProtocolDataType.EMPTY))

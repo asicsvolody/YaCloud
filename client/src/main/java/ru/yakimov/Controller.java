@@ -1,17 +1,20 @@
 package ru.yakimov;
 
 
+import com.google.common.primitives.Longs;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 
 import javafx.scene.control.*;
 
 import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
 import ru.yakimov.handlers.InProtocolHandler;
 
+import java.io.*;
+import java.util.Arrays;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class Controller {
 
@@ -33,6 +36,54 @@ public class Controller {
     }
 
     public void upload(){
+        FileChooser fileChooser = new FileChooser();
+        File selectedFile = fileChooser.showOpenDialog(path.getScene().getWindow());
+        System.out.println(selectedFile.getPath());
+        sendFile(selectedFile);
+
+    }
+
+    public Controller() {
+    }
+
+    private void sendFile(File selectedFile) {
+        String startCommand = selectedFile.getName() + InProtocolHandler.DATA_DELIMITER + path.getText();
+
+        Connector.getInstance().setAndSendFile(Commands.START_FILE, startCommand.getBytes());
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
+            byte[] byteArray = new byte[8192];
+            int i = -1;
+            while ((i = in.read(byteArray)) != -1){
+                Connector.getInstance().setAndSendFile(Commands.FILE, Arrays.copyOf(byteArray, i));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Connector.getInstance().setAndSendFile(Commands.END_FILE, Longs.toByteArray(selectedFile.length()));
+
+//        try (RandomAccessFile data = new RandomAccessFile(selectedFile, "r")) {
+//            byte[] eight = new byte[2048];
+//            for (long i = 0, len = data.length() / 2048; i < len; i++) {
+//                data.readFully(eight);
+//                // do something with the 8 bytes
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -46,9 +97,6 @@ public class Controller {
             String data = path.getText() + InProtocolHandler.DATA_DELIMITER + result.get();
             Connector.getInstance().setAndSendCommand(Commands.NEW_FOLDER, data.getBytes());
         });
-
-
-
 
     }
 
@@ -99,7 +147,6 @@ public class Controller {
 
     }
 
-
     @FXML
     private void clickIncite(MouseEvent mouseEvent){
         if(mouseEvent.getClickCount() == 2 && !unitListView.getSelectionModel().isEmpty()){
@@ -110,11 +157,6 @@ public class Controller {
                 goToPath(unit.getDirBefore());
         }
     }
-
-
-
-
-
 
     public void initializeUnitListView(String[] units) {
         String parentDir = units[0];

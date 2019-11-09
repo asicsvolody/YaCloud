@@ -48,9 +48,8 @@ public class VerificationController {
 
     @FXML
     private void login() {
-        Connector connector = Connector.getInstance();
-        connector.setCommandProtocol("auth", login.getText() + " " + password.getText());
-        connector.send();
+        String authData = login.getText() + " " + password.getText();
+        Connector.getInstance().setAndSendCommand(Commands.AUTH, authData.getBytes());
     }
 
     private void showMainScene() {

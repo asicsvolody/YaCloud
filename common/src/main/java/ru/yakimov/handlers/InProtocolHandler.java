@@ -14,7 +14,7 @@ import ru.yakimov.ProtocolDataType;
 
 public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
-    public static final String UNITS_DELIMETER = "//%//";
+    public static final String UNITS_SEPARATOR = "//%//";
     public static final String DATA_DELIMITER = " ";
     public static final String ROOT_DIR = "root/";
 
@@ -32,23 +32,38 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        System.out.println("Получен буфер");
         ByteBuf buf = ((ByteBuf) msg);
 
         if (state == -1) {
+
+            System.out.println("reader index"+buf.readerIndex());
+            System.out.println("writer index"+buf.writerIndex());
+
             byte firstByte = buf.readByte();
             type = ProtocolDataType.getDataTypeFromByte(firstByte);
 
-            if(type.equals(ProtocolDataType.EMPTY))
-                return;
+            if(type.equals(ProtocolDataType.EMPTY)) {
+                System.err.println("Stage -1 error: "+type.getFirstMessageByte());
+                 return;
+            }
             outArr[IndexProtocol.TYPE.getInt()]= type;
             state = 0;
             reqLen = 4;
+            System.out.println("Получен буфер " + type.getFirstMessageByte());
+
         }
 
 
+
+
         if(state == 0){
+
+            System.out.println("reader index"+buf.readerIndex());
+            System.out.println("writer index"+buf.writerIndex());
+
             if (buf.readableBytes() < reqLen) {
+                System.err.println("Stage 0 error "+buf.readableBytes()+" < "+reqLen);
+
                 return;
             }
             reqLen = buf.readInt();
@@ -60,7 +75,12 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (state == 1) {
+
+            System.out.println("reader index"+buf.readerIndex());
+            System.out.println("writer index"+buf.writerIndex());
+
             if (buf.readableBytes() < reqLen) {
+                System.err.println("Stage 1 error "+buf.readableBytes()+" < "+reqLen);
                 return;
             }
             byte[] info = new byte[reqLen];
@@ -72,7 +92,13 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (state == 2) {
+
+            System.out.println("reader index"+buf.readerIndex());
+            System.out.println("writer index"+buf.writerIndex());
+
             if (buf.readableBytes() < reqLen) {
+                System.err.println("Stage 2 error "+buf.readableBytes()+" < "+reqLen);
+
                 return;
             }
             reqLen = buf.readInt();
@@ -84,7 +110,12 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (state == 3) {
+
+            System.out.println("reader index"+buf.readerIndex());
+            System.out.println("writer index"+buf.writerIndex());
+
             if (buf.readableBytes() < reqLen) {
+                System.err.println("Stage 3 error "+buf.readableBytes()+" < "+reqLen);
                 return;
             }
             byte[] data = new byte[reqLen];
@@ -98,8 +129,9 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             System.out.println(new String(data));
 
         }
-
         buf.release();
+        buf.clear();
+
 
     }
 

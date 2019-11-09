@@ -9,6 +9,7 @@ package ru.yakimov.handlers;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.Commands;
+import ru.yakimov.IndexProtocol;
 import ru.yakimov.ProtocolDataType;
 import ru.yakimov.mySql.FilesDB;
 import ru.yakimov.utils.YaCloudUtils;
@@ -30,11 +31,18 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         dataObjArr = ((Object[]) msg);
 
         Commands command;
+        
+        ProtocolDataType type = ((ProtocolDataType) dataObjArr[IndexProtocol.TYPE.getInt()]);
 
-        if(((ProtocolDataType) dataObjArr[0]).equals(ProtocolDataType.FILE)){
+        System.out.println(type.getFirstMessageByte());
+
+        if(type.equals(ProtocolDataType.FILE)){
+            System.err.println("Get file annotation");
             ctx.fireChannelRead(dataObjArr);
+
             return;
         }
+
 
         command = Commands.getCommand(new String(((byte[]) dataObjArr[2])));
         String commandData = new String(((byte[]) dataObjArr[4]));
@@ -90,7 +98,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
     public void sendUnits(String parentDir) {
         try {
-            String unitsData = String.join(InProtocolHandler.UNITS_DELIMETER, FilesDB.getInstance().getUnitsFromDir(login, parentDir ));
+            String unitsData = String.join(InProtocolHandler.UNITS_SEPARATOR, FilesDB.getInstance().getUnitsFromDir(login, parentDir ));
             YaCloudUtils.writeToArrBack(dataObjArr, Commands.GO_TO_DIR, unitsData);
         } catch (SQLException e) {
             e.printStackTrace();

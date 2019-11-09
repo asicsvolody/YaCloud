@@ -22,6 +22,7 @@ import ru.yakimov.handlers.InProtocolHandler;
 import ru.yakimov.handlers.OutProtocolHandler;
 
 import java.net.InetSocketAddress;
+import java.util.stream.Stream;
 
 public class Connector {
 
@@ -204,9 +205,13 @@ public class Connector {
         new Thread(task).start();
     }
 
-    public void setCommandProtocol(String command, String strData){
-        setProtocol(ProtocolDataType.COMMAND, command.getBytes(), strData.getBytes());
-    }
+//    public void setCommandProtocol(String command, String strData){
+//        setProtocol(ProtocolDataType.COMMAND, command.getBytes(), strData.getBytes());
+//    }
+//
+//    public void setFileProtocol(String command, byte[] data){
+//        setProtocol(ProtocolDataType.FILE, command.getBytes(), data);
+//    }
 
     public void setProtocol(ProtocolDataType type, byte[] commandArr, byte[] data){
         dataForSend[0] = type;
@@ -215,13 +220,19 @@ public class Connector {
         dataForSend[3] = data.length;
         dataForSend[4] = data;
 
+
+        Stream.of(dataForSend).forEach(System.out:: println);
+
     }
-
-
 
 
     public void setAndSendCommand(Commands command, byte[] dataArr){
         setProtocol(ProtocolDataType.COMMAND, command.getString().getBytes(), dataArr);
+        send();
+    }
+
+    public void setAndSendFile(Commands command, byte[] dataArr){
+        setProtocol(ProtocolDataType.FILE, command.getString().getBytes(), dataArr);
         send();
     }
 

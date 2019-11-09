@@ -79,7 +79,7 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         if(verificationDB.isUser(login, pass)){
 
             YaCloudUtils.writeToArrBack(arrBack, Commands.AUTH_OK
-                    ,String.join(InProtocolHandler.UNITS_DELIMETER, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)));
+                    ,String.join(InProtocolHandler.UNITS_SEPARATOR, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)));
 
             isAuthorisation = true;
         }else {

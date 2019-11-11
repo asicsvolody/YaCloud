@@ -28,6 +28,9 @@ public class MyServer {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new OutProtocolHandler(), new InProtocolHandler(),new VerificationHandler(), new CommandHandler(), new FileUnloadHandler());
+                            System.out.println(ch.config().getReceiveBufferSize());
+                            System.out.println(ch.config().getSendBufferSize());
+
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true);

@@ -80,12 +80,15 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                 break;
 
             case END_FILE:
+                System.out.println("!!!!!!!! END FILE !!!!!!!");
                 out.close();
                 long fileLength = Longs.fromByteArray(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
 
                 System.out.println(fileLength);
 
                 long realLength = file.toFile().length();
+
+                System.out.println(realLength);
                 if(realLength != fileLength){
                     ctx.pipeline()
                             .get(CommandHandler.class)

@@ -38,7 +38,7 @@ public class Controller {
     public void upload(){
         FileChooser fileChooser = new FileChooser();
         File selectedFile = fileChooser.showOpenDialog(path.getScene().getWindow());
-        System.out.println(selectedFile.getPath());
+        System.out.println(selectedFile);
         sendFile(selectedFile);
 
     }
@@ -58,7 +58,7 @@ public class Controller {
         }
 
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
-            byte[] byteArray = new byte[8192];
+            byte[] byteArray = new byte[2048];
             int i = -1;
             while ((i = in.read(byteArray)) != -1){
                 Connector.getInstance().setAndSendFile(Commands.FILE, Arrays.copyOf(byteArray, i));

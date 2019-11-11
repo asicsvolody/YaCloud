@@ -24,32 +24,25 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
         System.out.println("Получено задание на отправку");
         Object[] dataArr = (Object[]) msg;
 
-
         ProtocolDataType dataType = ((ProtocolDataType) dataArr[0]);
-
         ByteBufAllocator al = new PooledByteBufAllocator();
-        ByteBuf byteBuffer = al.buffer(4);
-        byteBuffer.writeByte(((ProtocolDataType) dataArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
-        ctx.writeAndFlush(byteBuffer);
 
-        if(dataType.equals(ProtocolDataType.EMPTY))
+        if(dataType.equals(ProtocolDataType.EMPTY)) {
+            ctx.writeAndFlush(al.buffer(1).writeByte(dataType.getFirstMessageByte()));
             return;
+        }
 
-        byteBuffer = al.buffer(4);
+        int dataBufferSize = 1 + 4 + (int) dataArr[1] + 4 + (int) dataArr[3];
+        ByteBuf byteBuffer = al.buffer(dataBufferSize);
+        byteBuffer.writeByte(((ProtocolDataType) dataArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
+
+
+
         byteBuffer.writeInt(((int) dataArr[1]));
-        ctx.writeAndFlush(byteBuffer);
-
-
-        byteBuffer = al.buffer((int) dataArr[1]);
         byteBuffer.writeBytes(((byte[]) dataArr[2]));
-        ctx.writeAndFlush(byteBuffer);
-
-        byteBuffer = al.buffer(4);
         byteBuffer.writeInt(((int) dataArr[3]));
-        ctx.writeAndFlush(byteBuffer);
-
-        byteBuffer = al.buffer((int) dataArr[3]);
         byteBuffer.writeBytes(((byte[]) dataArr[4]));
+
         ctx.writeAndFlush(byteBuffer);
     }
 

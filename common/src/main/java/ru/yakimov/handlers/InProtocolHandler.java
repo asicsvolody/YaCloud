@@ -7,6 +7,7 @@
 package ru.yakimov.handlers;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.IndexProtocol;
@@ -17,6 +18,10 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
     public static final String UNITS_SEPARATOR = "//%//";
     public static final String DATA_DELIMITER = " ";
     public static final String ROOT_DIR = "root/";
+
+    ByteBufAllocator allocator ;
+
+    private ByteBuf accumulator;
 
 
     private int state = -1;
@@ -49,7 +54,8 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             outArr[IndexProtocol.TYPE.getInt()]= type;
             state = 0;
             reqLen = 4;
-            System.out.println("Получен буфер " + type.getFirstMessageByte());
+            System.out.println("-------------------------------------------------------");
+            System.out.println("Получен буфер " + ((type.equals(ProtocolDataType.COMMAND))?"command":"file"));
 
         }
 
@@ -115,7 +121,33 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             System.out.println("writer index"+buf.writerIndex());
 
             if (buf.readableBytes() < reqLen) {
-                System.err.println("Stage 3 error "+buf.readableBytes()+" < "+reqLen);
+
+
+                if(accumulator == null && allocator == null){
+                    allocator = ctx.alloc();
+                    accumulator = allocator.directBuffer(reqLen);
+                }
+                byte[] bytesArr = new byte[buf.readableBytes()];
+
+                buf.readBytes(bytesArr);
+
+                accumulator.writeBytes(bytesArr);
+
+                System.err.println("accumulator readable Bytes = " + accumulator.readableBytes());
+
+                if(accumulator.readableBytes() == reqLen){
+                    System.out.println("accumulator go next!!!!!!!!");
+                    byte[] acData = new byte[reqLen];
+                    accumulator.readBytes(acData);
+                    outArr[4] = acData;
+                    ctx.fireChannelRead(outArr);
+                    state = -1;
+                    allocator = null;
+                    accumulator = null;
+                    buf.release();
+                }
+
+//                System.err.println("Stage 3 error "+buf.readableBytes()+" < "+reqLen);
                 return;
             }
             byte[] data = new byte[reqLen];
@@ -130,7 +162,6 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
         }
         buf.release();
-        buf.clear();
 
 
     }

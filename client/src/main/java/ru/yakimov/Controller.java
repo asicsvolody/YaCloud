@@ -38,7 +38,12 @@ public class Controller {
     public void upload(){
         FileChooser fileChooser = new FileChooser();
         File selectedFile = fileChooser.showOpenDialog(path.getScene().getWindow());
+
         System.out.println(selectedFile);
+
+        if(selectedFile == null)
+            return;
+
         sendFile(selectedFile);
 
     }

@@ -59,9 +59,6 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
         }
 
-
-
-
         if(state == 0){
 
             System.out.println("reader index"+buf.readerIndex());
@@ -120,45 +117,30 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             System.out.println("reader index"+buf.readerIndex());
             System.out.println("writer index"+buf.writerIndex());
 
-            if (buf.readableBytes() < reqLen) {
+            if(allocator == null){
+                allocator = ctx.alloc();
+            }
+            if(accumulator == null){
+                accumulator = allocator.directBuffer(reqLen);
+            }
 
+            accumulator.writeBytes(buf);
 
-                if(accumulator == null && allocator == null){
-                    allocator = ctx.alloc();
-                    accumulator = allocator.directBuffer(reqLen);
-                }
-                byte[] bytesArr = new byte[buf.readableBytes()];
-
-                buf.readBytes(bytesArr);
-
-                accumulator.writeBytes(bytesArr);
-
-                System.err.println("accumulator readable Bytes = " + accumulator.readableBytes());
-
-                if(accumulator.readableBytes() == reqLen){
-                    System.out.println("accumulator go next!!!!!!!!");
-                    byte[] acData = new byte[reqLen];
-                    accumulator.readBytes(acData);
-                    outArr[4] = acData;
-                    ctx.fireChannelRead(outArr);
-                    state = -1;
-                    allocator = null;
-                    accumulator = null;
-                    buf.release();
-                }
-
-//                System.err.println("Stage 3 error "+buf.readableBytes()+" < "+reqLen);
+            if(accumulator.readableBytes() < reqLen){
+                buf.release();
                 return;
             }
+
             byte[] data = new byte[reqLen];
-            buf.readBytes(data);
+            accumulator.readBytes(data);
             outArr[IndexProtocol.DATA.getInt()] = data;
 
             ctx.fireChannelRead(outArr);
 
             state = -1;
 
-            System.out.println(new String(data));
+            allocator = null;
+            accumulator = null;
 
         }
         buf.release();

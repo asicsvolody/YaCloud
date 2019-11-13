@@ -77,7 +77,7 @@
                     </tooltip>
 
                 </Button>
-                  <Button fx:id="load" mnemonicParsing="false" onAction="#load">
+                  <Button fx:id="download" mnemonicParsing="false" onAction="#download">
                      <graphic>
                         <ImageView fitHeight="45.0" fitWidth="49.0" pickOnBounds="true" preserveRatio="true">
                            <image>

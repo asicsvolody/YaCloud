@@ -11,20 +11,30 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 public class CloudHandler extends ChannelInboundHandlerAdapter {
 
+    public static final String DOWNLOAD_DIR = "./downloads/";
+
 
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Object[] msgArr = ((Object[]) msg);
-        if(((ProtocolDataType) msgArr[0]).equals(ProtocolDataType.FILE)){
-            ctx.fireChannelRead(msg);
+
+        Object[] dataObj = ((Object[]) msg);
+
+        ProtocolDataType type = ((ProtocolDataType) dataObj[IndexProtocol.TYPE.getInt()]);
+
+
+        if(type.equals(ProtocolDataType.FILE)){
+            System.err.println("Get file annotation");
+            ctx.fireChannelRead(dataObj);
+            return;
+
         }
 
-        Commands command = Commands.getCommand(new String((byte[]) msgArr[2]));
+        Commands command = Commands.getCommand(new String((byte[]) dataObj[2]));
         if(command == null)
             return;
 
-        String dataMsg = new String((byte[]) msgArr[IndexProtocol.DATA.getInt()]);
+        String dataMsg = new String((byte[]) dataObj[IndexProtocol.DATA.getInt()]);
         switch (command){
             case GO_TO_DIR:
                 SceneAssets.getInstance().getController().initializeUnitListView(dataMsg.split("//%//"));

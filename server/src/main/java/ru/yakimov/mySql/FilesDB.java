@@ -6,14 +6,8 @@
 
 package ru.yakimov.mySql;
 
-import ru.yakimov.MyServer;
-
-import javax.swing.text.html.ListView;
-import javax.xml.stream.XMLStreamException;
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class FilesDB {
@@ -57,6 +51,20 @@ public class FilesDB {
         }
     }
 
+    public boolean isFile(String login, String name, String dir, String ext){
+        int isFile = 0;
+        try(Statement stmt = connection.createStatement()){
+            String sql = String.format("SELECT unit_is_file FROM yaCloudDB.%s WHERE unit_parent='%s' AND unit_name='%s' AND unit_ext='%s'", login, dir, name, ext);
+            System.out.println(sql);
+            ResultSet rs = stmt.executeQuery(sql);
+            if(rs.next())
+                isFile = rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isFile == 1;
+    }
+
     public List<String> getUnitsFromDir(String login, String dir) {
 
         try(Statement stmt = connection.createStatement()){
@@ -84,6 +92,9 @@ public class FilesDB {
     }
 
     public boolean deleteUnit(String login, String unitName,String ext, String unitParent) throws SQLException {
+//        if(isDirectory(login,unitName,unitParent,ext)){
+//            deleteContent(login,unitName,unitParent);
+//        }
         String sql = String.format("DELETE FROM yaCloudDB.%s WHERE unit_name=? AND unit_parent=? AND unit_ext=?",login);
         try(PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, unitName);
@@ -96,9 +107,22 @@ public class FilesDB {
         }
     }
 
+//    private void deleteContent(String login, String dirName, String unitParent) {
+//        String directoryPath = unitParent + dirName + "/";
+//        String sql = String.format("DELETE FROM yaCloudDB.%s WHERE unit_parent LIKE %s",login, directoryPath+"%");
+//        try(Statement stmt = connection.createStatement()) {
+//            stmt.execute(sql);
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
+    private boolean isDirectory(String login, String unitName, String unitParent, String ext) {
+        return !isFile(login,unitName,unitParent,ext);
+    }
 
     public boolean addUnit(String login, String unitName, String unitExt, String unitParent, Boolean isFile, String unitPath, Long unitSize) throws SQLException {
+
         String sql = String.format("INSERT INTO yaCloudDB.%s (unit_name,unit_ext,unit_parent,unit_is_file, unit_path, unit_size) VALUES (?,?,?,?,?,?)",login);
         try(PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, unitName);

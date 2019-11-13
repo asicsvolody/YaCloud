@@ -26,13 +26,22 @@ import java.util.stream.Stream;
 
 public class Connector {
 
+
     private static Connector instance;
 
-    private BooleanProperty connected = new SimpleBooleanProperty(false);
+
+    private BooleanProperty connected ;
     private Channel channel;
     private EventLoopGroup group;
 
-    private Object[] dataForSend = new Object[5];
+    private Object[] dataForSend;
+
+    public Connector() {
+        connected = new SimpleBooleanProperty(false);
+        connect();
+        dataForSend = new Object[5];
+
+    }
 
     public static Connector getInstance(){
         Connector localInstance = instance;
@@ -55,6 +64,8 @@ public class Connector {
             return;
         }
 
+        System.out.println("Connection");
+
         String host = "localhost";
         int port = 8189;
 
@@ -76,7 +87,8 @@ public class Connector {
                         .handler( new ChannelInitializer<SocketChannel>() {
                             @Override
                             protected void initChannel(SocketChannel ch) throws Exception {
-                                ch.pipeline().addLast(new OutProtocolHandler(),new InProtocolHandler(), new VerificationHandler(), new CloudHandler());
+                                ch.pipeline().addLast(new OutProtocolHandler(),new InProtocolHandler()
+                                        , new VerificationHandler(), new CloudHandler(), new FileDownloadHandler());
                             }
                         });
 
@@ -99,8 +111,6 @@ public class Connector {
                 channel = getValue();
                 connected.set(true);
 
-//                countDownLatch.countDown();
-
             }
 
             @Override
@@ -115,17 +125,11 @@ public class Connector {
             }
         };
 
+
         new Thread(task).start();
     }
 
     public void send() {
-        if(!connected.get()) {
-            connect();
-        }
-
-
-
-
 
         final String toSend = "";
 
@@ -134,9 +138,11 @@ public class Connector {
             @Override
             protected Void call() throws Exception {
 
-                while(channel == null){
+                while(!connected.get()){
+                    System.out.println("sleep 500");
                     Thread.sleep(500);
                 }
+
 
                 ChannelFuture f = channel.writeAndFlush(dataForSend);
                 f.sync();
@@ -154,6 +160,8 @@ public class Connector {
                 exc.printStackTrace();
             }
         };
+
+
         new Thread(task).start();
     }
 
@@ -200,18 +208,9 @@ public class Connector {
 
         };
 
-
-
         new Thread(task).start();
     }
 
-//    public void setCommandProtocol(String command, String strData){
-//        setProtocol(ProtocolDataType.COMMAND, command.getBytes(), strData.getBytes());
-//    }
-//
-//    public void setFileProtocol(String command, byte[] data){
-//        setProtocol(ProtocolDataType.FILE, command.getBytes(), data);
-//    }
 
     public void setProtocol(ProtocolDataType type, byte[] commandArr, byte[] data){
         dataForSend[0] = type;

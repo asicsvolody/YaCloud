@@ -78,12 +78,12 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
 
         if(verificationDB.isUser(login, pass)){
 
-            YaCloudUtils.writeToArrBack(arrBack, Commands.AUTH_OK
+            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.AUTH_OK
                     ,String.join(InProtocolHandler.UNITS_SEPARATOR, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)));
 
             isAuthorisation = true;
         }else {
-            YaCloudUtils.writeToArrBack(arrBack, Commands.AUTH_ERROR, "There is not this user/password");
+            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.AUTH_ERROR, "There is not this user/password");
         }
     }
 
@@ -95,9 +95,9 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         String eMail = authData[2];
         String controlWord = authData[3];
         if(verificationDB.registration(login,pass,eMail,controlWord)){
-            YaCloudUtils.writeToArrBack(arrBack, Commands.REG_OK,  "Registration is ok");
+            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_OK,  "Registration is ok");
         }else{
-            YaCloudUtils.writeToArrBack(arrBack, Commands.REG_ERROR,  "This user exists");
+            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_ERROR,  "This user exists");
         }
     }
 

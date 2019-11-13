@@ -73,7 +73,7 @@ public class MySqlDb {
                 throw new SQLException("Error to connection to MySql!");
             }
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(true);
             return conn;
         }
         return conn;

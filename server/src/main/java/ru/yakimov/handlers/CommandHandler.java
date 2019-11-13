@@ -6,6 +6,7 @@
 
 package ru.yakimov.handlers;
 
+import com.google.common.primitives.Longs;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.Commands;
@@ -14,7 +15,14 @@ import ru.yakimov.ProtocolDataType;
 import ru.yakimov.mySql.FilesDB;
 import ru.yakimov.utils.YaCloudUtils;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 
 public class CommandHandler extends ChannelInboundHandlerAdapter {
@@ -54,6 +62,9 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
             case SAVE_LOGIN:
                 login = commandData;
                 return;
+            case DOWNLOAD_FILE:
+                sendFile(commandData, ctx);
+                return;
             case REFRESH:
             case GO_TO_DIR:
                 sendUnits(commandData);
@@ -64,15 +75,13 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
             case DELETE:
                 delete(commandData);
                 break;
-            case DOWNLOAD_FILE:
-                sendFile(commandData);
-                break;
+
         }
 
         ctx.write(dataObjArr);
     }
 
-    private void delete(String commandData) throws SQLException {
+    private void delete(String commandData) throws SQLException, IOException {
         String [] dataArr = commandData.split(InProtocolHandler.DATA_DELIMITER,3);
 
         if(dataArr.length <2)
@@ -82,6 +91,15 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         String fileName = dataArr[1].trim();
         String fileExt = (dataArr.length == 3)? dataArr[2]:" ";
 
+        Path unitPath = null;
+
+        if(FilesDB.getInstance().isFile(login,fileName,parentDir,fileExt)){
+            unitPath = Paths.get(new StringBuilder("./").append(parentDir).append(fileName).append(".").append(fileExt).toString());
+
+        }else{
+            unitPath = Paths.get(new StringBuilder("./").append(parentDir).append(fileName).append("/").toString());
+        }
+            deleteAll(unitPath);
 
         if(FilesDB.getInstance().deleteUnit(login, fileName, fileExt, parentDir)){
             sendUnits(parentDir);
@@ -91,7 +109,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void writeError(String msg){
-        YaCloudUtils.writeToArrBack(dataObjArr, Commands.ERROR, msg);
+        YaCloudUtils.writeToArrBackCommand(dataObjArr, Commands.ERROR, msg);
     }
 
 
@@ -99,14 +117,60 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     public void sendUnits(String parentDir) {
         try {
             String unitsData = String.join(InProtocolHandler.UNITS_SEPARATOR, FilesDB.getInstance().getUnitsFromDir(login, parentDir ));
-            YaCloudUtils.writeToArrBack(dataObjArr, Commands.GO_TO_DIR, unitsData);
+            YaCloudUtils.writeToArrBackCommand(dataObjArr, Commands.GO_TO_DIR, unitsData);
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
     }
 
-    public void sendFile(String data) {
+
+    private void deleteAll(Path path)  {
+        try {
+            if(Files.isDirectory(path)) {
+                    Files.list(path).forEach(this::deleteAll);
+            }
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendUnits(String parentDir, ChannelHandlerContext ctx) {
+       sendUnits(parentDir);
+        ctx.write(dataObjArr);
+    }
+
+    public void sendFile(String data, ChannelHandlerContext ctx) {
+        String[] dataArr = data.split(InProtocolHandler.DATA_DELIMITER,3);
+        String fileName = dataArr[1]+"."+dataArr[2];
+        String parent = dataArr[0];
+        Path file = Paths.get("./"+parent+fileName);
+        if(Files.notExists(file)){
+            writeError("FIle not exist:" + file);
+            ctx.write(dataObjArr);
+            return;
+        }
+
+        YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.START_FILE, fileName);
+        ctx.write(dataObjArr);
+
+        try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(file.toFile()))){
+            byte[] byteArray = new byte[2048];
+            int i = -1;
+            while ((i = in.read(byteArray)) != -1){
+
+                YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.FILE, Arrays.copyOf(byteArray, i));
+                ctx.write(dataObjArr);
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.END_FILE, Longs.toByteArray(file.toFile().length()));
+        ctx.write(dataObjArr);
 
     }
 

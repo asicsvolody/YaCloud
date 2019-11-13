@@ -4,21 +4,26 @@
  * E-mail: yakimovvn@bk.ru
  */
 
-package ru.yakimov.handlers;
+package ru.yakimov;
 
 import com.google.common.primitives.Longs;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import ru.yakimov.Commands;
-import ru.yakimov.IndexProtocol;
+import ru.yakimov.handlers.InProtocolHandler;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.Arrays;
 
-public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
+public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
 
-    private final String tmpDir ="./tmp/";
+    private final String DOWNLOAD_DIR ="./download/";
     private BufferedOutputStream out;
     private String parentDir;
     private Path file;
@@ -30,22 +35,19 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
 
         System.err.println(command.getString());
 
-        switch (command){
+        switch (command) {
             case START_FILE:
 
-                String[] fileArr = new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]))
-                        .split(InProtocolHandler.DATA_DELIMITER,2);
+                String fileName = new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
 
-
-                file = Paths.get(tmpDir+fileArr[0]);
-                if(!Files.exists(file.getParent())){
+                file = Paths.get(DOWNLOAD_DIR + fileName);
+                if (!Files.exists(file.getParent())) {
                     Files.createDirectories(file.getParent());
                 }
                 Files.createFile(file);
 
                 System.out.println(file.getFileName());
 
-                parentDir = fileArr[1];
                 out = new BufferedOutputStream(new FileOutputStream(file.toFile(), true));
                 break;
 
@@ -59,26 +61,16 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                 out.close();
                 long fileLength = Longs.fromByteArray(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
                 long realLength = file.toFile().length();
-                if(realLength != fileLength){
-                    ctx.pipeline()
-                            .get(CommandHandler.class)
-                            .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength));
-                    return;
+                if (realLength != fileLength) {
+                    SceneAssets.getInstance().getController().showAlertError("Download error",
+                            "File is break");
                 }
-                Files.createDirectories(Paths.get("./"+parentDir));
-                Files.move(file
-                        , Paths.get("./"+parentDir+file.getFileName())
-                        , StandardCopyOption.REPLACE_EXISTING );
-                String[] fileNameArr = file.getFileName().toString().split("\\.",2);
-                if(ctx.pipeline().get(CommandHandler.class)
-                        .addUnit(fileNameArr[0], fileNameArr[1], parentDir, true, parentDir+file.getFileName(), fileLength)){
-                    ctx.pipeline().get(CommandHandler.class).sendUnits(parentDir, ctx);
-                    out = null;
-                    file = null;
-                    parentDir = null;
-                }
+                out = null;
+                file = null;
+                parentDir = null;
         }
     }
+
 
 
 

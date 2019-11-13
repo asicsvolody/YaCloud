@@ -18,6 +18,8 @@ import java.util.Optional;
 
 public class Controller {
 
+    byte[] byteArray = new byte[2048];
+
     @FXML
     private TextField path;
 
@@ -29,11 +31,6 @@ public class Controller {
         goToPath(path.getText());
     }
 
-
-    public void load(){
-        System.out.println("Load");
-
-    }
 
     public void upload(){
         FileChooser fileChooser = new FileChooser();
@@ -63,10 +60,14 @@ public class Controller {
         }
 
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
-            byte[] byteArray = new byte[2048];
             int i = -1;
             while ((i = in.read(byteArray)) != -1){
                 Connector.getInstance().setAndSendFile(Commands.FILE, Arrays.copyOf(byteArray, i));
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -79,16 +80,6 @@ public class Controller {
         }
 
         Connector.getInstance().setAndSendFile(Commands.END_FILE, Longs.toByteArray(selectedFile.length()));
-
-//        try (RandomAccessFile data = new RandomAccessFile(selectedFile, "r")) {
-//            byte[] eight = new byte[2048];
-//            for (long i = 0, len = data.length() / 2048; i < len; i++) {
-//                data.readFully(eight);
-//                // do something with the 8 bytes
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
     }
 
@@ -105,21 +96,33 @@ public class Controller {
 
     }
 
+    @FXML
+    private void download(){
+        sendSelected(Commands.DOWNLOAD_FILE);
+    }
+
     public void rename(){
 
     }
 
     public void delete(){
+        sendSelected(Commands.DELETE);
+    }
+
+    public void sendSelected(Commands command){
         if(!unitListView.getSelectionModel().isEmpty()){
             Unit unit = unitListView.getSelectionModel().getSelectedItem();
-            String data = String.join(InProtocolHandler.DATA_DELIMITER, new String[]{path.getText(), unit.getName(), unit.getExt()});
-            Connector.getInstance().setAndSendCommand(Commands.DELETE, data.getBytes());
+            String data = String.join(InProtocolHandler.DATA_DELIMITER
+                    , new String[]{
+                            path.getText()
+                            , unit.getName()
+                            , unit.getExt()
+            });
+            Connector.getInstance().setAndSendCommand(command, data.getBytes());
         }else{
-            showAlertError("DeleteError", "No object selected ");
+            showAlertError(command.commandStr+" Error", "No object selected ");
 
         }
-
-
     }
 
     public void setting(){

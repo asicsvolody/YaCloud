@@ -20,9 +20,12 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import ru.yakimov.handlers.InProtocolHandler;
 import ru.yakimov.handlers.OutProtocolHandler;
+import ru.yakimov.utils.MyPackege;
+import ru.yakimov.utils.PackageController;
 
 import java.net.InetSocketAddress;
-import java.util.stream.Stream;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class Connector {
 
@@ -34,12 +37,18 @@ public class Connector {
     private Channel channel;
     private EventLoopGroup group;
 
-    private Object[] dataForSend;
+    private PackageController packageController;
+    private BlockingQueue<MyPackege> queue;
+
+
+
+//    private Object[] dataForSend;
 
     public Connector() {
-        connected = new SimpleBooleanProperty(false);
-        connect();
-        dataForSend = new Object[5];
+        this.connected = new SimpleBooleanProperty(false);
+        this.packageController = new PackageController();
+        this.queue = new ArrayBlockingQueue<>(100);
+//        dataForSend = new Object[5];
 
     }
 
@@ -54,6 +63,10 @@ public class Connector {
             }
         }
         return  localInstance;
+    }
+
+    public void addToQueue(MyPackege myPackage){
+        queue.add(myPackage);
     }
 
 
@@ -110,6 +123,7 @@ public class Connector {
 
                 channel = getValue();
                 connected.set(true);
+                sending();
 
             }
 
@@ -129,7 +143,7 @@ public class Connector {
         new Thread(task).start();
     }
 
-    public void send() {
+    public void sending() {
 
         final String toSend = "";
 
@@ -138,16 +152,16 @@ public class Connector {
             @Override
             protected Void call() throws Exception {
 
-                while(!connected.get()){
-                    System.out.println("sleep 500");
-                    Thread.sleep(500);
+                ChannelFuture f = null;
+                while(connected.get()){
+                    MyPackege myPackege = queue.take();
+                    f = channel.writeAndFlush(myPackege.getDataForSend());
+                    myPackege.disable();
+
+                    if(!channel.isOpen())
+                        break;
                 }
-
-
-                ChannelFuture f = channel.writeAndFlush(dataForSend);
                 f.sync();
-
-
                 return null;
             }
 
@@ -212,27 +226,25 @@ public class Connector {
     }
 
 
-    public void setProtocol(ProtocolDataType type, byte[] commandArr, byte[] data){
-        dataForSend[0] = type;
-        dataForSend[1] = commandArr.length;
-        dataForSend[2] = commandArr;
-        dataForSend[3] = data.length;
-        dataForSend[4] = data;
 
 
-        Stream.of(dataForSend).forEach(System.out:: println);
 
-    }
-
-
-    public void setAndSendCommand(Commands command, byte[] dataArr){
-        setProtocol(ProtocolDataType.COMMAND, command.getString().getBytes(), dataArr);
-        send();
+    public void addToSend(ProtocolDataType type, Commands command, byte[] dataArr){
+        if(!connected.get())
+            connect();
+        MyPackege myPackege = packageController.getActiveElement();
+        myPackege.set(type, command.getString().getBytes(), dataArr);
+        queue.add(myPackege);
     }
 
     public void setAndSendFile(Commands command, byte[] dataArr){
-        setProtocol(ProtocolDataType.FILE, command.getString().getBytes(), dataArr);
-        send();
+       addToSend(ProtocolDataType.FILE, command, dataArr);
+    }
+
+    public void setAndSendCommand(Commands command, byte[] dataArr){
+        System.out.println("Sending command");
+        addToSend(ProtocolDataType.COMMAND, command, dataArr);
+
     }
 
 }

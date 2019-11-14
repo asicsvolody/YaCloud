@@ -18,7 +18,7 @@ import java.util.Optional;
 
 public class Controller {
 
-    byte[] byteArray = new byte[2048];
+    byte[] byteArray = new byte[20480];
 
     @FXML
     private TextField path;
@@ -53,31 +53,31 @@ public class Controller {
 
         Connector.getInstance().setAndSendFile(Commands.START_FILE, startCommand.getBytes());
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
             int i = -1;
             while ((i = in.read(byteArray)) != -1){
                 Connector.getInstance().setAndSendFile(Commands.FILE, Arrays.copyOf(byteArray, i));
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         Connector.getInstance().setAndSendFile(Commands.END_FILE, Longs.toByteArray(selectedFile.length()));
 

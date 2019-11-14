@@ -156,7 +156,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         ctx.write(dataObjArr);
 
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(file.toFile()))){
-            byte[] byteArray = new byte[2048];
+            byte[] byteArray = new byte[20480];
             int i = -1;
             while ((i = in.read(byteArray)) != -1){
 

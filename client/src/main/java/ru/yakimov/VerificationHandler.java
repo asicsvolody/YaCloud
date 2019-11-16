@@ -15,10 +15,12 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
 
     private Controller controller;
     private VerificationController verificationController;
+    private RegController regController;
 
-    public VerificationHandler() throws IOException {
+    public VerificationHandler() {
         this.controller = SceneAssets.getInstance().getController();
         this.verificationController = SceneAssets.getInstance().getVerificationController();
+        this.regController = SceneAssets.getInstance().getRegController();
     }
 
     @Override
@@ -36,17 +38,17 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
                 verificationController.setAuthorisation(false,  new String(((byte[]) msgArr[4])));
             }
             if(command.startsWith("regOk")){
-                verificationController.setAuthorisation(false,  new String(((byte[]) msgArr[4])));
+                regController.showRegScene();
             }
-            if(command.startsWith("regArr")){
-                verificationController.setAuthorisation(false,  new String(((byte[]) msgArr[4])));
+            if(command.startsWith("regError")){
+                regController.setRegMsg(new String(((byte[]) msgArr[4])));
             }
         }
 
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
     }

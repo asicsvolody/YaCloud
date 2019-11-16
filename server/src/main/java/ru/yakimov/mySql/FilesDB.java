@@ -32,22 +32,22 @@ public class FilesDB {
         this.connection = MySqlDb.getInstance().getConnection();
     }
 
-    public boolean createUserTable(String login) throws SQLException {
-        try(PreparedStatement ps = connection.prepareStatement(
-                "CREATE TABLE ?" +
-                        "  `unit_name` VARCHAR(45) NOT NULL," +
-                        "  `unit_ext` VARCHAR(10) NOT NULL," +
-                        " `unit_parent` VARCHAR(45) NOT NULL," +
-                        " `unit_is_file` TINYINT NOT NULL," +
-                        " `unit_path` VARCHAR(45) NOT NULL," +
-                        " `unit_date` DATETIME NOT NULL DEFAULT now()," +
-                        " `unit_size` LONGBLOB NOT NULL," +
-                        " PRIMARY KEY (`unit_name`, `unit_ext`, `unit_parent`, `unit_is_file`)," +
-                        " UNIQUE INDEX `unit_path_UNIQUE` (`unit_path` ASC));"
-        )) {
+    public void createUserTable(String login) throws SQLException {
+        try(Statement stmt = connection.createStatement();) {
+            String sql = String.format("CREATE TABLE `yaCloudDB`.`%s` (" +
+                    "  `unit_name` varchar(45) NOT NULL," +
+                    "  `unit_ext` varchar(10) NOT NULL," +
+                    "  `unit_parent` varchar(500) NOT NULL," +
+                    "  `unit_is_file` tinyint(4) NOT NULL," +
+                    "  `unit_path` varchar(1000) NOT NULL," +
+                    "  `unit_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  `unit_size` int(11) NOT NULL DEFAULT 0," +
+                    "  PRIMARY KEY (`unit_name`,`unit_parent`,`unit_is_file`,`unit_ext`)," +
+                    "  UNIQUE KEY `unit_path_UNIQUE` (`unit_path`)" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8",login);
 
-            ps.setString(1, login);
-            return ps.execute();
+            System.out.println(sql);
+            stmt.execute(sql);
         }
     }
 

@@ -29,6 +29,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
 
     String login;
+    String userDir;
 
     Object[] dataObjArr;
 
@@ -61,6 +62,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         switch (command){
             case SAVE_LOGIN:
                 login = commandData;
+                userDir = "./STORAGE/"+login+"/";
                 return;
             case DOWNLOAD_FILE:
                 sendFile(commandData, ctx);
@@ -202,5 +204,9 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    public String getUserDir() {
+        return userDir;
     }
 }

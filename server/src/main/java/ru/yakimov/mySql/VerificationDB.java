@@ -54,7 +54,7 @@ public class VerificationDB {
                 .prepareStatement("SELECT * FROM yaCloudDB.users WHERE users_login =?");
         ps.setString(1,login);
         ResultSet rs = ps.executeQuery();
-        boolean result =  rs.wasNull();
+        boolean result =  rs.next();
         rs.close();
         ps.close();
         return result;
@@ -69,12 +69,12 @@ public class VerificationDB {
         ps.setString(2,pass);
         ps.setString(3,eMail);
         ps.setString(4,controlWord);
-        boolean res = ps.execute();
+        System.out.println(ps.toString());
+        boolean res = ps.executeUpdate() > 0;
 
         if(res){
-            res = FilesDB.getInstance().createUserTable(login);
-        }
-        if(!res)
+            FilesDB.getInstance().createUserTable(login);
+        }else
             deleteUser(login);
         ps.close();
         return res;
@@ -83,7 +83,7 @@ public class VerificationDB {
 
     private boolean deleteUser(String login) throws SQLException {
         try(PreparedStatement ps = connection
-                .prepareStatement("DELETE * FROM yaCloudDB.users where user_login =?")){
+                .prepareStatement("DELETE FROM yaCloudDB.users where user_login =?")){
             ps.setString(1, login);
             return ps.execute();
         }

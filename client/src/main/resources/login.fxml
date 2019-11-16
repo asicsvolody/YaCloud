@@ -48,7 +48,7 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="293.0">
                <children>
-                  <Hyperlink text="Registration">
+                  <Hyperlink text="Registration" onAction="#showRegScene">
                      <HBox.margin>
                         <Insets left="20.0" />
                      </HBox.margin>

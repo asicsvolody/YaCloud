@@ -65,9 +65,10 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                             .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength));
                     return;
                 }
-                Files.createDirectories(Paths.get("./"+parentDir));
+                String userDir = ctx.pipeline().get(CommandHandler.class).userDir;
+                Files.createDirectories(Paths.get(userDir+parentDir));
                 Files.move(file
-                        , Paths.get("./"+parentDir+file.getFileName())
+                        , Paths.get(userDir+parentDir+file.getFileName())
                         , StandardCopyOption.REPLACE_EXISTING );
                 String[] fileNameArr = file.getFileName().toString().split("\\.",2);
                 if(ctx.pipeline().get(CommandHandler.class)

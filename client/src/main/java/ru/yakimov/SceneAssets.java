@@ -22,9 +22,13 @@ public class SceneAssets {
 
     private Controller controller;
     private VerificationController verificationController;
+    private RegController regController;
+
 
     private Scene sampleScene;
     private Scene verificationScene;
+    private Scene regScene;
+
 
     public static SceneAssets getInstance(){
         SceneAssets localInstance = instance;
@@ -52,6 +56,13 @@ public class SceneAssets {
             verificationScene = new Scene(loginRoot, windowWeight, windowHeight);
             verificationController = loginLoader.getController();
 
+            FXMLLoader regLoader = new FXMLLoader();
+            Parent regRoot = regLoader.load(getClass().getResourceAsStream("/registration.fxml"));
+            regScene = new Scene(regRoot, windowWeight, windowHeight);
+            regController = regLoader.getController();
+
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -72,5 +83,13 @@ public class SceneAssets {
 
     public Scene getVerificationScene() {
         return verificationScene;
+    }
+
+    public RegController getRegController() {
+        return regController;
+    }
+
+    public Scene getRegScene() {
+        return regScene;
     }
 }

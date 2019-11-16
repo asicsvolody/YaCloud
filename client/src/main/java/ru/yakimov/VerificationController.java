@@ -7,6 +7,7 @@
 package ru.yakimov;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -55,6 +56,12 @@ public class VerificationController {
     private void showMainScene() {
 
         ((Stage) password.getScene().getWindow()).setScene(SceneAssets.getInstance().getSampleScene());
+    }
+
+    @FXML
+    private void showRegScene() {
+
+        ((Stage) password.getScene().getWindow()).setScene(SceneAssets.getInstance().getRegScene());
     }
 
 }

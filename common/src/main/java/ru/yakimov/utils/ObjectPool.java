@@ -18,8 +18,8 @@ public abstract class ObjectPool<T extends Poolable> {
     }
 
     public ObjectPool() {
-        this.activeList = new ArrayList<T>();
-        this.freeList = new ArrayList<T>();
+        this.activeList = new ArrayList<>();
+        this.freeList = new ArrayList<>();
     }
 
     public T getActiveElement() {

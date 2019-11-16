@@ -95,6 +95,8 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         String eMail = authData[2];
         String controlWord = authData[3];
         if(verificationDB.registration(login,pass,eMail,controlWord)){
+
+
             YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_OK,  "Registration is ok");
         }else{
             YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_ERROR,  "This user exists");

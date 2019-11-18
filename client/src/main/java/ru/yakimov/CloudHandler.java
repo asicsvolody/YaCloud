@@ -2,6 +2,7 @@ package ru.yakimov;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import ru.yakimov.utils.MyPackage;
 
 /**
  * Created by IntelliJ Idea.
@@ -18,23 +19,25 @@ public class CloudHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        Object[] dataObj = ((Object[]) msg);
+        MyPackage myPackage = ((MyPackage) msg);
 
-        ProtocolDataType type = ((ProtocolDataType) dataObj[IndexProtocol.TYPE.getInt()]);
+        ProtocolDataType type = myPackage.getType();
 
 
         if(type.equals(ProtocolDataType.FILE)){
             System.err.println("Get file annotation");
-            ctx.fireChannelRead(dataObj);
+            ctx.fireChannelRead(myPackage);
             return;
 
         }
 
-        Commands command = Commands.getCommand(new String((byte[]) dataObj[2]));
-        if(command == null)
+        Commands command = Commands.getCommand(new String(myPackage.getCommandArr()));
+        if(command == null){
+            myPackage.disable();
             return;
+        }
 
-        String dataMsg = new String((byte[]) dataObj[IndexProtocol.DATA.getInt()]);
+        String dataMsg = new String(myPackage.getDataArrForRead());
         switch (command){
             case GO_TO_DIR:
                 SceneAssets.getInstance().getController().initializeUnitListView(dataMsg.split("//%//"));
@@ -42,6 +45,8 @@ public class CloudHandler extends ChannelInboundHandlerAdapter {
             case ERROR:
                 SceneAssets.getInstance().getController().showAlertError("ERROR", dataMsg);
         }
+
+        myPackage.disable();
 
 
     }

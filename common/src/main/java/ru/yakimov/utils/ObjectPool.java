@@ -1,5 +1,6 @@
 package ru.yakimov.utils;
 
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +26,9 @@ public abstract class ObjectPool<T extends Poolable> {
     public T getActiveElement() {
         while(activeList.size()>=100){
             try {
-                Thread.sleep(200);
+                Thread.sleep(500);
                 checkPool();
+                System.err.println("WAITING POOL FREE ELEMENTS");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -37,6 +39,7 @@ public abstract class ObjectPool<T extends Poolable> {
 
         T temp = freeList.remove(freeList.size() - 1);
         activeList.add(temp);
+        temp.enable();
         return temp;
     }
 

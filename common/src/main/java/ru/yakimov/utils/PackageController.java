@@ -6,11 +6,11 @@
 
 package ru.yakimov.utils;
 
-public class PackageController extends ObjectPool<MyPackege>{
+public class PackageController extends ObjectPool<MyPackage>{
 
     @Override
-    protected MyPackege newObject() {
-        return new MyPackege();
+    protected MyPackage newObject() {
+        return new MyPackage();
     }
 
 }

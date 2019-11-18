@@ -7,39 +7,51 @@
 package ru.yakimov.handlers;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import ru.yakimov.IndexProtocol;
 import ru.yakimov.ProtocolDataType;
+import ru.yakimov.utils.MyPackage;
+import ru.yakimov.utils.PackageController;
 
 public class InProtocolHandler extends ChannelInboundHandlerAdapter {
+
+
+    public static final int DATA_MAX_SIZE = 1024 * 1024 * 1;
 
     public static final String UNITS_SEPARATOR = "//%//";
     public static final String DATA_DELIMITER = " ";
     public static final String ROOT_DIR = "root/";
 
-    ByteBufAllocator allocator ;
+//    ByteBufAllocator allocator ;
 
     private ByteBuf accumulator;
+
+    private PackageController packageController = new PackageController();
 
 
     private int state = -1;
     private int reqLen = -1;
     private ProtocolDataType type = ProtocolDataType.EMPTY;
 
-    private Object[] outArr = new Object[5];
+    MyPackage myPackage;
 
     public InProtocolHandler() {
         System.out.println("InProtocolHandler created");
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+
+        System.out.println("-------------------------------------------------------");
+
+        if(accumulator == null)
+            accumulator = ctx.alloc().directBuffer(DATA_MAX_SIZE);
 
         ByteBuf buf = ((ByteBuf) msg);
 
+
         if (state == -1) {
+            myPackage = packageController.getActiveElement();
 
             System.out.println("reader index"+buf.readerIndex());
             System.out.println("writer index"+buf.writerIndex());
@@ -51,10 +63,11 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
                 System.err.println("Stage -1 error: "+type.getFirstMessageByte());
                  return;
             }
-            outArr[IndexProtocol.TYPE.getInt()]= type;
+            myPackage.setType(type);
+
+
             state = 0;
             reqLen = 4;
-            System.out.println("-------------------------------------------------------");
             System.out.println("Получен буфер " + ((type.equals(ProtocolDataType.COMMAND))?"command":"file"));
 
         }
@@ -70,7 +83,7 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
                 return;
             }
             reqLen = buf.readInt();
-            outArr[IndexProtocol.COMMAND_LENGTH.getInt()] = reqLen;
+            myPackage.setCommandLength(reqLen);
             state = 1;
 
             System.out.println(reqLen);
@@ -86,12 +99,14 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
                 System.err.println("Stage 1 error "+buf.readableBytes()+" < "+reqLen);
                 return;
             }
-            byte[] info = new byte[reqLen];
-            buf.readBytes(info);
-            outArr[IndexProtocol.COMMAND.getInt()] = info;
+            byte[] commandArr = new byte[reqLen];
+            buf.readBytes(commandArr);
+
+            myPackage.setCommandArr(commandArr);
             state = 2;
             reqLen = 4;
-            System.out.println(new String(info));
+            System.out.println(new String(myPackage.getCommandArr()));
+
         }
 
         if (state == 2) {
@@ -105,7 +120,8 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
                 return;
             }
             reqLen = buf.readInt();
-            outArr[IndexProtocol.DATA_LENGTH.getInt()] = reqLen;
+            myPackage.setDataLength(reqLen);
+//            outArr[IndexProtocol.DATA_LENGTH.getInt()] = reqLen;
             state = 3;
 
             System.out.println(reqLen);
@@ -117,13 +133,6 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             System.out.println("reader index"+buf.readerIndex());
             System.out.println("writer index"+buf.writerIndex());
 
-            if(allocator == null){
-                allocator = ctx.alloc();
-            }
-            if(accumulator == null){
-                accumulator = allocator.directBuffer(reqLen);
-            }
-
             accumulator.writeBytes(buf);
 
             if(accumulator.readableBytes() < reqLen){
@@ -131,26 +140,30 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
                 return;
             }
 
-            byte[] data = new byte[reqLen];
-            accumulator.readBytes(data);
-            outArr[IndexProtocol.DATA.getInt()] = data;
+            System.out.println("Прочитанные акамулятором  символы " + accumulator.readableBytes());
 
-            ctx.fireChannelRead(outArr);
+            accumulator.readBytes(myPackage.getDataArrForWrite(accumulator.readableBytes()));
 
+            ctx.fireChannelRead(myPackage);
+
+            accumulator.clear();
             state = -1;
-
-            allocator = null;
-            accumulator = null;
 
         }
         buf.release();
+        packageController.checkPool();
 
+        System.out.println("-------------------------------------------------------");
 
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    public PackageController getPackageController() {
+        return packageController;
     }
 }

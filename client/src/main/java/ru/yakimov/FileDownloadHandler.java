@@ -9,7 +9,7 @@ package ru.yakimov;
 import com.google.common.primitives.Longs;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import ru.yakimov.handlers.InProtocolHandler;
+import ru.yakimov.utils.MyPackage;
 
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -17,9 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.sql.SQLException;
-import java.util.Arrays;
 
 public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
 
@@ -29,16 +26,18 @@ public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
     private Path file;
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws IOException, SQLException {
-        Object[] objArr = (Object[]) msg;
-        Commands command = Commands.getCommand(((byte[]) objArr[IndexProtocol.COMMAND.getInt()]));
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws IOException {
+
+        MyPackage myPackage = ((MyPackage) msg);
+//        Object[] objArr = (Object[]) msg;
+        Commands command = Commands.getCommand(myPackage.getCommandArr());
 
         System.err.println(command.getString());
 
         switch (command) {
             case START_FILE:
 
-                String fileName = new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
+                String fileName = new String(myPackage.getDataArrForRead());
 
                 file = Paths.get(DOWNLOAD_DIR + fileName);
                 if (!Files.exists(file.getParent())) {
@@ -48,18 +47,18 @@ public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
 
                 System.out.println(file.getFileName());
 
+                Files.deleteIfExists(file);
                 out = new BufferedOutputStream(new FileOutputStream(file.toFile(), true));
                 break;
 
             case FILE:
-                byte[] bytes = (byte[]) objArr[IndexProtocol.DATA.getInt()];
-                System.out.println(bytes.length);
-                out.write(bytes);
+                System.out.println("Writing file");
+                out.write(myPackage.getDataArrForRead());
                 break;
 
             case END_FILE:
                 out.close();
-                long fileLength = Longs.fromByteArray(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
+                long fileLength = Longs.fromByteArray(myPackage.getDataArrForRead());
                 long realLength = file.toFile().length();
                 if (realLength != fileLength) {
                     SceneAssets.getInstance().getController().showAlertError("Download error",
@@ -69,6 +68,7 @@ public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
                 file = null;
                 parentDir = null;
         }
+        myPackage.disable();
     }
 
 

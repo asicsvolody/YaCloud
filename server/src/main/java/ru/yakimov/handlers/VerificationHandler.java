@@ -9,19 +9,19 @@ package ru.yakimov.handlers;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.Commands;
-import ru.yakimov.IndexProtocol;
 import ru.yakimov.ProtocolDataType;
 import ru.yakimov.mySql.FilesDB;
 import ru.yakimov.mySql.VerificationDB;
-import ru.yakimov.utils.YaCloudUtils;
+import ru.yakimov.utils.MyPackage;
 
 import java.sql.SQLException;
 
 public class VerificationHandler extends ChannelInboundHandlerAdapter {
-    private Object[] arrBack = new Object[5];
     private boolean isAuthorisation = false;
     private VerificationDB verificationDB ;
     private FilesDB filesDB ;
+
+    MyPackage myPackage;
 
 
     @Override
@@ -29,23 +29,14 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         verificationDB = VerificationDB.getInstance();
         filesDB = FilesDB.getInstance();
 
-        Object[] objArr = ((Object[]) msg);
+        myPackage = ((MyPackage) msg);
 
-
-        System.out.println(((ProtocolDataType) objArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
-        System.out.println(((int) objArr[IndexProtocol.COMMAND_LENGTH.getInt()]));
-        System.out.println((new String(((byte[]) objArr[IndexProtocol.COMMAND.getInt()]))));
-        System.out.println(((int) objArr[IndexProtocol.DATA_LENGTH.getInt()]));
-        System.out.println((new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]))));
-
-
-
-        if(!objArr[0].equals(ProtocolDataType.COMMAND)){
+        if(!myPackage.getType().equals(ProtocolDataType.COMMAND)){
             return;
         }
 
-        String command = new String(((byte[]) objArr[2]));
-        String data = new String(((byte[]) objArr[4]));
+        String command = new String(myPackage.getCommandArr());
+        String data = new String(myPackage.getDataArrForRead());
 
 
         if(command.equals(Commands.AUTH.getString())){
@@ -53,22 +44,23 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
             String login = authData[0];
             String pass = authData[1];
             authorisation(login, pass);
-            ctx.fireChannelRead(new Object[]{
+
+            MyPackage packageSaveLogin = ctx.pipeline().get(InProtocolHandler.class).getPackageController().getActiveElement();
+            packageSaveLogin.set(
                     ProtocolDataType.COMMAND,
-                    Commands.SAVE_LOGIN.getString().length()
-                    ,Commands.SAVE_LOGIN.getString().getBytes()
-                    ,login.length()
-                    ,login.getBytes()
-            });
+                    Commands.SAVE_LOGIN,
+                    login.getBytes()
+                    );
+
+            ctx.fireChannelRead(packageSaveLogin);
 
         }else if(command.equals(Commands.REG.getString())){
             registration(data);
-
         }else{
-            arrBack[0] = ProtocolDataType.EMPTY;
+            myPackage.setType(ProtocolDataType.EMPTY);
         }
 
-        ctx.write(arrBack);
+        ctx.write(myPackage);
 
         if(isAuthorisation)
             ctx.pipeline().remove(this.getClass());
@@ -78,12 +70,18 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
 
         if(verificationDB.isUser(login, pass)){
 
-            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.AUTH_OK
-                    ,String.join(InProtocolHandler.UNITS_SEPARATOR, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)));
+            myPackage.set(ProtocolDataType.COMMAND,
+                    Commands.AUTH_OK,
+                    String.join(InProtocolHandler.UNITS_SEPARATOR, filesDB.getUnitsFromDir(login, InProtocolHandler.ROOT_DIR)).getBytes()
+            );
 
             isAuthorisation = true;
         }else {
-            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.AUTH_ERROR, "There is not this user/password");
+
+            myPackage.set(ProtocolDataType.COMMAND,
+                    Commands.AUTH_ERROR,
+                    "There is not this user/password".getBytes()
+            );
         }
     }
 
@@ -95,16 +93,21 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
         String eMail = authData[2];
         String controlWord = authData[3];
         if(verificationDB.registration(login,pass,eMail,controlWord)){
-
-
-            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_OK,  "Registration is ok");
+            myPackage.set(ProtocolDataType.COMMAND,
+                    Commands.REG_OK,
+                    "Registration is ok".getBytes()
+            );
         }else{
-            YaCloudUtils.writeToArrBackCommand(arrBack, Commands.REG_ERROR,  "This user exists");
+
+            myPackage.set(ProtocolDataType.COMMAND,
+                    Commands.REG_ERROR,
+                    "This user exists".getBytes()
+            );
         }
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
         cause.printStackTrace();
         ctx.close();
     }

@@ -10,15 +10,13 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import ru.yakimov.handlers.InProtocolHandler;
+import ru.yakimov.utils.MyPackage;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Optional;
 
 
 public class Controller {
-
-    byte[] byteArray = new byte[20480];
 
     @FXML
     private TextField path;
@@ -49,22 +47,38 @@ public class Controller {
     }
 
     private void sendFile(File selectedFile) {
+
         String startCommand = selectedFile.getName() + InProtocolHandler.DATA_DELIMITER + path.getText();
 
         Connector.getInstance().setAndSendFile(Commands.START_FILE, startCommand.getBytes());
 
+        MyPackage myPackage = Connector.getInstance().getPackage();
+
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
             int i = -1;
-            while ((i = in.read(byteArray)) != -1){
-                Connector.getInstance().setAndSendFile(Commands.FILE, Arrays.copyOf(byteArray, i));
+            int packNumber = 0;
 
+            while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
+                packNumber++;
+                System.err.println("Send package "+ i + " num# "+packNumber);
+                myPackage.trimDataArr(i);
+                myPackage.setType(ProtocolDataType.FILE);
+                myPackage.setCommandWithLength(Commands.FILE);
+                Connector.getInstance().addToQueue(myPackage);
+                myPackage = Connector.getInstance().getPackage();
+
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        myPackage.disable();
 
         Connector.getInstance().setAndSendFile(Commands.END_FILE, Longs.toByteArray(selectedFile.length()));
-
     }
 
     public void newFolder(){
@@ -161,6 +175,7 @@ public class Controller {
                 unitListView.getItems().add(new Unit(parentDir,-1, "","", "", ""));
             }
             path.setText(parentDir);
+
 
             for (String unit : units) {
                 String[] unitData = unit.split(InProtocolHandler.DATA_DELIMITER, 5);

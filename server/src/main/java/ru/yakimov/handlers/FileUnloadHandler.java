@@ -10,7 +10,7 @@ import com.google.common.primitives.Longs;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.Commands;
-import ru.yakimov.IndexProtocol;
+import ru.yakimov.utils.MyPackage;
 
 import java.io.*;
 import java.nio.file.*;
@@ -22,18 +22,22 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
     private BufferedOutputStream out;
     private String parentDir;
     private Path file;
+    int packNumber = 0;
+
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws IOException, SQLException {
-        Object[] objArr = (Object[]) msg;
-        Commands command = Commands.getCommand(((byte[]) objArr[IndexProtocol.COMMAND.getInt()]));
+
+        MyPackage myPackage = ((MyPackage) msg);
+        Commands command = Commands.getCommand(myPackage.getCommandArr());
 
         System.err.println(command.getString());
 
+
         switch (command){
             case START_FILE:
-
-                String[] fileArr = new String(((byte[]) objArr[IndexProtocol.DATA.getInt()]))
+                packNumber = 0;
+                String[] fileArr = new String(myPackage.getDataArrForRead())
                         .split(InProtocolHandler.DATA_DELIMITER,2);
 
 
@@ -46,18 +50,23 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                 System.out.println(file.getFileName());
 
                 parentDir = fileArr[1];
+                Files.deleteIfExists(file);
                 out = new BufferedOutputStream(new FileOutputStream(file.toFile(), true));
+                myPackage.disable();
                 break;
 
             case FILE:
-                byte[] bytes = (byte[]) objArr[IndexProtocol.DATA.getInt()];
-                System.out.println(bytes.length);
-                out.write(bytes);
+                packNumber++;
+                System.err.println("pack# "+ packNumber);
+//                byte[] bytes = (byte[]) objArr[IndexProtocol.DATA.getInt()];
+//                System.out.println(bytes.length);
+                out.write(myPackage.getDataArrForRead());
+                myPackage.disable();
                 break;
 
             case END_FILE:
                 out.close();
-                long fileLength = Longs.fromByteArray(((byte[]) objArr[IndexProtocol.DATA.getInt()]));
+                long fileLength = Longs.fromByteArray(myPackage.getDataArrForRead());
                 long realLength = file.toFile().length();
                 if(realLength != fileLength){
                     ctx.pipeline()
@@ -65,7 +74,7 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                             .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength));
                     return;
                 }
-                String userDir = ctx.pipeline().get(CommandHandler.class).userDir;
+                String userDir = ctx.pipeline().get(CommandHandler.class).getUserDir();
                 Files.createDirectories(Paths.get(userDir+parentDir));
                 Files.move(file
                         , Paths.get(userDir+parentDir+file.getFileName())

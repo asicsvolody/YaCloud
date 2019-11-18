@@ -20,7 +20,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import ru.yakimov.handlers.InProtocolHandler;
 import ru.yakimov.handlers.OutProtocolHandler;
-import ru.yakimov.utils.MyPackege;
+import ru.yakimov.utils.MyPackage;
 import ru.yakimov.utils.PackageController;
 
 import java.net.InetSocketAddress;
@@ -38,17 +38,14 @@ public class Connector {
     private EventLoopGroup group;
 
     private PackageController packageController;
-    private BlockingQueue<MyPackege> queue;
+    private BlockingQueue<MyPackage> queue;
 
 
 
-//    private Object[] dataForSend;
 
     public Connector() {
         this.connected = new SimpleBooleanProperty(false);
-        this.packageController = new PackageController();
-        this.queue = new ArrayBlockingQueue<>(100);
-//        dataForSend = new Object[5];
+        this.queue = new ArrayBlockingQueue<>(80);
 
     }
 
@@ -65,7 +62,7 @@ public class Connector {
         return  localInstance;
     }
 
-    public void addToQueue(MyPackege myPackage){
+    public void addToQueue(MyPackage myPackage){
         queue.add(myPackage);
     }
 
@@ -92,6 +89,9 @@ public class Connector {
                 updateMessage("Bootstrapping");
                 updateProgress(0.1d, 1.0d);
 
+                InProtocolHandler inProtocolHandler = new InProtocolHandler();
+                packageController = inProtocolHandler.getPackageController();
+
                 Bootstrap b = new Bootstrap();
                 b
                         .group(group)
@@ -100,7 +100,7 @@ public class Connector {
                         .handler( new ChannelInitializer<SocketChannel>() {
                             @Override
                             protected void initChannel(SocketChannel ch) throws Exception {
-                                ch.pipeline().addLast(new OutProtocolHandler(),new InProtocolHandler()
+                                ch.pipeline().addLast(new OutProtocolHandler(), inProtocolHandler
                                         , new VerificationHandler(), new CloudHandler(), new FileDownloadHandler());
                             }
                         });
@@ -145,8 +145,6 @@ public class Connector {
 
     public void sending() {
 
-        final String toSend = "";
-
         Task<Void> task = new Task<Void>() {
 
             @Override
@@ -154,12 +152,12 @@ public class Connector {
 
                 ChannelFuture f = null;
                 while(connected.get()){
-                    MyPackege myPackege = queue.take();
-                    f = channel.writeAndFlush(myPackege.getDataForSend());
-                    myPackege.disable();
+                    MyPackage myPackage = queue.take();
+                    f = channel.writeAndFlush(myPackage);
 
                     if(!channel.isOpen())
                         break;
+                    Thread.sleep(100);
                 }
                 f.sync();
                 return null;
@@ -232,13 +230,24 @@ public class Connector {
     public void addToSend(ProtocolDataType type, Commands command, byte[] dataArr){
         if(!connected.get())
             connect();
-        MyPackege myPackege = packageController.getActiveElement();
-        myPackege.set(type, command.getString().getBytes(), dataArr);
-        queue.add(myPackege);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        MyPackage myPackage = packageController.getActiveElement();
+        myPackage.set(type, command.getString().getBytes(), dataArr);
+        queue.add(myPackage);
     }
 
     public void setAndSendFile(Commands command, byte[] dataArr){
-       addToSend(ProtocolDataType.FILE, command, dataArr);
+        addToSend(ProtocolDataType.FILE, command, dataArr);
+    }
+
+    public void setAndSendFile(Commands command, int length, byte[] dataArr){
+        addToSend(ProtocolDataType.FILE, command, dataArr);
     }
 
     public void setAndSendCommand(Commands command, byte[] dataArr){
@@ -247,4 +256,12 @@ public class Connector {
 
     }
 
+    public void addPackageToQueue(MyPackage myPackage){
+        queue.add(myPackage);
+
+    }
+
+    public MyPackage getPackage() {
+        return packageController.getActiveElement();
+    }
 }

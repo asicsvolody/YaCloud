@@ -6,10 +6,10 @@
 
 package ru.yakimov;
 
+import io.netty.buffer.PoolSubpageMetric;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-
-import java.io.IOException;
+import ru.yakimov.utils.MyPackage;
 
 public class VerificationHandler extends ChannelInboundHandlerAdapter {
 
@@ -25,23 +25,23 @@ public class VerificationHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Object[] msgArr = ((Object[]) msg);
+        MyPackage myPackage = ((MyPackage) msg);
 
 
         if(!verificationController.isAuthorisation()){
-            String command = new String(((byte[]) msgArr[2]));
+            String command = new String(myPackage.getCommandArr());
             if(command.startsWith("authOk")){
-                verificationController.setAuthorisation(true,  new String(((byte[]) msgArr[4])));
+                verificationController.setAuthorisation(true,  new String(myPackage.getDataArrForRead()));
                 ctx.pipeline().remove(VerificationHandler.this.getClass());
             }
             if(command.startsWith("authError")){
-                verificationController.setAuthorisation(false,  new String(((byte[]) msgArr[4])));
+                verificationController.setAuthorisation(false,  new String(myPackage.getDataArrForRead()));
             }
             if(command.startsWith("regOk")){
                 regController.showRegScene();
             }
             if(command.startsWith("regError")){
-                regController.setRegMsg(new String(((byte[]) msgArr[4])));
+                regController.setRegMsg(new String(myPackage.getDataArrForRead()));
             }
         }
 

@@ -12,8 +12,8 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
-import ru.yakimov.IndexProtocol;
 import ru.yakimov.ProtocolDataType;
+import ru.yakimov.utils.MyPackage;
 
 
 public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
@@ -22,32 +22,38 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         System.out.println("Получено задание на отправку");
-        Object[] dataArr = (Object[]) msg;
 
-        ProtocolDataType dataType = ((ProtocolDataType) dataArr[0]);
+        MyPackage myPackage = ((MyPackage) msg);
+
+        ProtocolDataType dataType = myPackage.getType();
+
         ByteBufAllocator al = new PooledByteBufAllocator();
 
         if(dataType.equals(ProtocolDataType.EMPTY)) {
             ctx.writeAndFlush(al.buffer(1).writeByte(dataType.getFirstMessageByte()));
+            myPackage.disable();
             return;
         }
 
-        int dataBufferSize = 1 + 4 + (int) dataArr[1] + 4 + (int) dataArr[3];
+        int dataBufferSize = 1 + 4 + myPackage.getCommandLength() + 4 + myPackage.getDataLength();
+
         ByteBuf byteBuffer = al.buffer(dataBufferSize);
-        byteBuffer.writeByte(((ProtocolDataType) dataArr[IndexProtocol.TYPE.getInt()]).getFirstMessageByte());
 
+        byteBuffer.writeByte(myPackage.getType().getFirstMessageByte());
 
-
-        byteBuffer.writeInt(((int) dataArr[1]));
-        byteBuffer.writeBytes(((byte[]) dataArr[2]));
-        byteBuffer.writeInt(((int) dataArr[3]));
-        byteBuffer.writeBytes(((byte[]) dataArr[4]));
+        byteBuffer.writeInt(myPackage.getCommandLength());
+        byteBuffer.writeBytes(myPackage.getCommandArr());
+        byteBuffer.writeInt(myPackage.getDataLength());
+        byteBuffer.writeBytes(myPackage.getDataArrForRead());
 
         ctx.writeAndFlush(byteBuffer);
+
+        myPackage.disable();
+        ctx.pipeline().get(InProtocolHandler.class).getPackageController().checkPool();
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
     }

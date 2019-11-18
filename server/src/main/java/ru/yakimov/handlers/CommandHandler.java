@@ -10,10 +10,10 @@ import com.google.common.primitives.Longs;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import ru.yakimov.Commands;
-import ru.yakimov.IndexProtocol;
 import ru.yakimov.ProtocolDataType;
 import ru.yakimov.mySql.FilesDB;
-import ru.yakimov.utils.YaCloudUtils;
+import ru.yakimov.utils.MyPackage;
+import ru.yakimov.utils.PackageController;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -22,39 +22,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 
 public class CommandHandler extends ChannelInboundHandlerAdapter {
 
 
-    String login;
-    String userDir;
+    private String login;
+    private String userDir;
 
-    Object[] dataObjArr;
-
+    private MyPackage myPackage;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
-        dataObjArr = ((Object[]) msg);
+        myPackage = ((MyPackage) msg);
 
         Commands command;
         
-        ProtocolDataType type = ((ProtocolDataType) dataObjArr[IndexProtocol.TYPE.getInt()]);
+        ProtocolDataType type = (myPackage.getType());
 
         System.out.println(type.getFirstMessageByte());
 
         if(type.equals(ProtocolDataType.FILE)){
             System.err.println("Get file annotation");
-            ctx.fireChannelRead(dataObjArr);
-
+            ctx.fireChannelRead(myPackage);
             return;
         }
 
 
-        command = Commands.getCommand(new String(((byte[]) dataObjArr[2])));
-        String commandData = new String(((byte[]) dataObjArr[4]));
+        command = Commands.getCommand(myPackage.getCommandArr());
+        String commandData = new String(myPackage.getDataArrForRead());
 
         if(command == null)
             return;
@@ -80,7 +77,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
         }
 
-        ctx.write(dataObjArr);
+        ctx.write(myPackage);
     }
 
     private void delete(String commandData) throws SQLException, IOException {
@@ -96,10 +93,10 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         Path unitPath = null;
 
         if(FilesDB.getInstance().isFile(login,fileName,parentDir,fileExt)){
-            unitPath = Paths.get(new StringBuilder("./").append(parentDir).append(fileName).append(".").append(fileExt).toString());
+            unitPath = Paths.get(new StringBuilder(userDir).append(parentDir).append(fileName).append(".").append(fileExt).toString());
 
         }else{
-            unitPath = Paths.get(new StringBuilder("./").append(parentDir).append(fileName).append("/").toString());
+            unitPath = Paths.get(new StringBuilder(userDir).append(parentDir).append(fileName).append("/").toString());
         }
             deleteAll(unitPath);
 
@@ -111,7 +108,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void writeError(String msg){
-        YaCloudUtils.writeToArrBackCommand(dataObjArr, Commands.ERROR, msg);
+        myPackage.set(ProtocolDataType.COMMAND, Commands.ERROR, msg.getBytes());
     }
 
 
@@ -119,7 +116,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     public void sendUnits(String parentDir) {
         try {
             String unitsData = String.join(InProtocolHandler.UNITS_SEPARATOR, FilesDB.getInstance().getUnitsFromDir(login, parentDir ));
-            YaCloudUtils.writeToArrBackCommand(dataObjArr, Commands.GO_TO_DIR, unitsData);
+            myPackage.set(ProtocolDataType.COMMAND, Commands.GO_TO_DIR, unitsData.getBytes());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -140,39 +137,56 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
     public void sendUnits(String parentDir, ChannelHandlerContext ctx) {
        sendUnits(parentDir);
-        ctx.write(dataObjArr);
+        ctx.write(myPackage);
     }
 
     public void sendFile(String data, ChannelHandlerContext ctx) {
+        System.out.println("---------SENDING FILE-----------");
+
+        PackageController packageController = ctx.pipeline().get(InProtocolHandler.class).getPackageController();
+
+
         String[] dataArr = data.split(InProtocolHandler.DATA_DELIMITER,3);
         String fileName = dataArr[1]+"."+dataArr[2];
         String parent = dataArr[0];
-        Path file = Paths.get("./"+parent+fileName);
+
+        Path file = Paths.get(userDir+parent+fileName);
+
         if(Files.notExists(file)){
             writeError("FIle not exist:" + file);
-            ctx.write(dataObjArr);
+            ctx.write(myPackage);
             return;
         }
 
-        YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.START_FILE, fileName);
-        ctx.write(dataObjArr);
+        System.out.println("----START FILE----------------");
 
+        myPackage.set(ProtocolDataType.FILE,Commands.START_FILE, fileName.getBytes());
+        ctx.write(myPackage);
+
+
+        myPackage = packageController.getActiveElement();
+
+        System.out.println("-------FILE---------");
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(file.toFile()))){
-            byte[] byteArray = new byte[20480];
             int i = -1;
-            while ((i = in.read(byteArray)) != -1){
-
-                YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.FILE, Arrays.copyOf(byteArray, i));
-                ctx.write(dataObjArr);
+            while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
+                System.out.println("-------Pick FILE---------");
+                myPackage.trimDataArr(i);
+                myPackage.setType(ProtocolDataType.FILE);
+                myPackage.setCommandWithLength(Commands.FILE);
+                ctx.write(myPackage);
+                myPackage = packageController.getActiveElement();
             }
-
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        YaCloudUtils.writeToArrBackFile(dataObjArr, Commands.END_FILE, Longs.toByteArray(file.toFile().length()));
-        ctx.write(dataObjArr);
+        System.out.println("------END FILE ----------");
+        myPackage.set(ProtocolDataType.FILE, Commands.END_FILE, Longs.toByteArray(file.toFile().length()));
+        ctx.write(myPackage);
+
+        System.out.println("--------END SENDING-----------");
 
     }
 
@@ -209,4 +223,6 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
     public String getUserDir() {
         return userDir;
     }
+
+
 }

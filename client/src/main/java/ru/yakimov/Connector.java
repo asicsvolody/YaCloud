@@ -157,7 +157,6 @@ public class Connector {
 
                     if(!channel.isOpen())
                         break;
-                    Thread.sleep(100);
                 }
                 f.sync();
                 return null;

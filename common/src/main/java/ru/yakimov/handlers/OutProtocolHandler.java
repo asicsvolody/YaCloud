@@ -6,6 +6,7 @@
 
 package ru.yakimov.handlers;
 
+import com.sun.tools.javac.code.Attribute;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -18,37 +19,56 @@ import ru.yakimov.utils.MyPackage;
 
 public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
 
+    private ByteBuf accumulator;
+
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        System.out.println("Получено задание на отправку");
+        System.err.println("Получено задание на отправку");
 
         MyPackage myPackage = ((MyPackage) msg);
 
+        if(new String(myPackage.getCommandArr()).equals("startFile") || new String(myPackage.getCommandArr()).equals("file")){
+            System.out.println();
+        }
+
+        if(accumulator == null)
+            accumulator = ctx.alloc().directBuffer(InProtocolHandler.DATA_MAX_SIZE + 2048);
+
         ProtocolDataType dataType = myPackage.getType();
 
-        ByteBufAllocator al = new PooledByteBufAllocator();
-
         if(dataType.equals(ProtocolDataType.EMPTY)) {
-            ctx.writeAndFlush(al.buffer(1).writeByte(dataType.getFirstMessageByte()));
+            System.err.println("Protocol is empty");
+            accumulator.writeByte(dataType.getFirstMessageByte());
+            ctx.writeAndFlush(accumulator);
+            accumulator.clear();
             myPackage.disable();
+
             return;
         }
 
-        int dataBufferSize = 1 + 4 + myPackage.getCommandLength() + 4 + myPackage.getDataLength();
 
-        ByteBuf byteBuffer = al.buffer(dataBufferSize);
+        accumulator.writeByte(myPackage.getType().getFirstMessageByte());
 
-        byteBuffer.writeByte(myPackage.getType().getFirstMessageByte());
+        accumulator.writeInt(myPackage.getCommandLength());
 
-        byteBuffer.writeInt(myPackage.getCommandLength());
-        byteBuffer.writeBytes(myPackage.getCommandArr());
-        byteBuffer.writeInt(myPackage.getDataLength());
-        byteBuffer.writeBytes(myPackage.getDataArrForRead());
+        accumulator.writeBytes(myPackage.getCommandArr());
 
-        ctx.writeAndFlush(byteBuffer);
+        accumulator.writeInt(myPackage.getDataLength());
+
+        accumulator.writeBytes(myPackage.getDataArrForRead());
+
+        System.out.println("Writable bites before "+ accumulator.readableBytes());
+
+        ctx.writeAndFlush(accumulator.retain());
 
         myPackage.disable();
+
+        accumulator.clear();
+
+
+        System.out.println("Writable bites after "+ accumulator.readableBytes());
+
         ctx.pipeline().get(InProtocolHandler.class).getPackageController().checkPool();
     }
 

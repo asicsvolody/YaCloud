@@ -69,6 +69,7 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                 long fileLength = Longs.fromByteArray(myPackage.getDataArrForRead());
                 long realLength = file.toFile().length();
                 if(realLength != fileLength){
+                    System.err.println("Dif SIZe "+realLength +" AND "+fileLength);
                     ctx.pipeline()
                             .get(CommandHandler.class)
                             .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength));
@@ -88,6 +89,8 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                     parentDir = null;
                 }
         }
+
+        System.out.println("########################################");
     }
 
 

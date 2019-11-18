@@ -54,6 +54,8 @@ public class Controller {
 
         MyPackage myPackage = Connector.getInstance().getPackage();
 
+
+
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
             int i = -1;
             int packNumber = 0;
@@ -68,7 +70,7 @@ public class Controller {
                 myPackage = Connector.getInstance().getPackage();
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -77,6 +79,7 @@ public class Controller {
             e.printStackTrace();
         }
         myPackage.disable();
+
 
         Connector.getInstance().setAndSendFile(Commands.END_FILE, Longs.toByteArray(selectedFile.length()));
     }

@@ -159,8 +159,10 @@ public class MyPackage implements Poolable{
     }
 
     public void trimDataArr(int length){
+
         dataObjArr[DATA_LENGTH] = length;
-        dataObjArr[DATA] = Arrays.copyOf(((byte[]) dataObjArr[DATA]), length);
+        if(length != ((byte[]) dataObjArr[DATA]).length)
+            dataObjArr[DATA] = Arrays.copyOf(((byte[]) dataObjArr[DATA]), length);
 
     }
 

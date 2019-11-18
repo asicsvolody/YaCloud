@@ -59,8 +59,14 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             byte firstByte = buf.readByte();
             type = ProtocolDataType.getDataTypeFromByte(firstByte);
 
+            if(type.equals(ProtocolDataType.FILE)) {
+                System.err.println("FILE PROTOCOL");
+            }
+
+
+
             if(type.equals(ProtocolDataType.EMPTY)) {
-                System.err.println("Stage -1 error: "+type.getFirstMessageByte());
+                System.err.println("Stage -1 error PACK is EMPTY");
                  return;
             }
             myPackage.setType(type);
@@ -150,10 +156,12 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
             state = -1;
 
         }
+        buf.clear();
         buf.release();
         packageController.checkPool();
 
         System.out.println("-------------------------------------------------------");
+
 
     }
 

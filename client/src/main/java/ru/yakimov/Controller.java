@@ -54,6 +54,12 @@ public class Controller {
 
         MyPackage myPackage = Connector.getInstance().getPackage();
 
+//        try {
+//            Thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
 
 
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
@@ -63,10 +69,13 @@ public class Controller {
             while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
                 packNumber++;
                 System.err.println("Send package "+ i + " num# "+packNumber);
-                myPackage.trimDataArr(i);
-                myPackage.setType(ProtocolDataType.FILE);
-                myPackage.setCommandWithLength(Commands.FILE);
-                Connector.getInstance().addToQueue(myPackage);
+                Connector.getInstance()
+                        .addToQueue(
+                                myPackage
+                                    .trimDataArr(i)
+                                    .setType(ProtocolDataType.FILE)
+                                    .setCommandWithLength(Commands.FILE)
+                );
                 myPackage = Connector.getInstance().getPackage();
 
                 try {

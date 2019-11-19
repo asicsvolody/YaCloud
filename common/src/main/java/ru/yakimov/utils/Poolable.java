@@ -4,5 +4,6 @@ public interface Poolable {
     boolean isActive();
     void enable();
     void disable();
+    int getPackageNumber();
 }
 

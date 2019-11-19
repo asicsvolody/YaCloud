@@ -6,7 +6,6 @@
 
 package ru.yakimov.utils;
 
-import com.sun.deploy.security.ValidationState;
 import ru.yakimov.Commands;
 import ru.yakimov.ProtocolDataType;
 import ru.yakimov.handlers.InProtocolHandler;
@@ -15,6 +14,8 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 public class MyPackage implements Poolable{
+
+    public int packageNumber;
 
     private static final int TYPE           = 0;
     private static final int COMMAND_LENGTH = 1;
@@ -29,7 +30,8 @@ public class MyPackage implements Poolable{
 
     private final Object[] dataObjArr;
 
-    public MyPackage() {
+    public MyPackage(int packageNumber) {
+        this.packageNumber = packageNumber;
         this.dataObjArr = new Object[5];
         this.dataArr = new byte[InProtocolHandler.DATA_MAX_SIZE];
         dataObjArr[4] = dataArr;
@@ -62,24 +64,24 @@ public class MyPackage implements Poolable{
         return dataObjArr;
     }
 
-    public void set(ProtocolDataType type, byte[] commandArr, byte[] data){
+    public MyPackage set(ProtocolDataType type, byte[] commandArr, byte[] data){
         dataObjArr[TYPE] = type;
         dataObjArr[COMMAND_LENGTH] = commandArr.length;
         dataObjArr[COMMAND] = commandArr;
         setDataWithLength(data);
 
-
-
         Stream.of(dataObjArr).forEach(System.out:: println);
 
+        return this;
     }
 
-    public void set(ProtocolDataType type, Commands command, byte[] data){
-        set(type, command.getString().getBytes(), data);
+    public MyPackage set(ProtocolDataType type, Commands command, byte[] data){
+        return set(type, command.getString().getBytes(), data);
     }
 
-    public void setType(ProtocolDataType type){
+    public MyPackage setType(ProtocolDataType type){
         dataObjArr[TYPE] = type;
+        return this;
     }
 
     public void setCommandLength(int length){
@@ -94,26 +96,30 @@ public class MyPackage implements Poolable{
         dataObjArr[DATA_LENGTH] = length;
     }
 
-    public void setData(byte[] data){
+    public MyPackage setData(byte[] data){
         if(data.length < InProtocolHandler.DATA_MAX_SIZE) {
             dataObjArr[DATA] = data;
-            return;
+            return null;
         }
         System.arraycopy(data, 0, dataArr, 0, data.length);
         dataObjArr[DATA] = dataObjArr;
 
+        return this;
+
     }
 
-    public void setCommandWithLength(Commands command){
+    public MyPackage setCommandWithLength(Commands command){
         byte[] commandArr = command.getString().getBytes();
         setCommandLength(commandArr.length);
         setCommandArr(commandArr);
+        return this;
 
     }
 
-    public void setDataWithLength(byte[] data){
+    public MyPackage setDataWithLength(byte[] data){
         setDataLength(data.length);
         setData(data);
+        return this;
     }
 
     public ProtocolDataType getType(){
@@ -139,7 +145,7 @@ public class MyPackage implements Poolable{
     }
 
     public byte[] getDataArrForWrite(){
-        dataObjArr[4] = dataArr;
+        dataObjArr[DATA] = dataArr;
         return ((byte[]) dataObjArr[DATA]);
     }
 
@@ -158,15 +164,16 @@ public class MyPackage implements Poolable{
 
     }
 
-    public void trimDataArr(int length){
+    public MyPackage trimDataArr(int length){
 
         dataObjArr[DATA_LENGTH] = length;
         if(length != ((byte[]) dataObjArr[DATA]).length)
             dataObjArr[DATA] = Arrays.copyOf(((byte[]) dataObjArr[DATA]), length);
+        return this;
 
     }
 
-
-
-
+    public int getPackageNumber() {
+        return packageNumber;
+    }
 }

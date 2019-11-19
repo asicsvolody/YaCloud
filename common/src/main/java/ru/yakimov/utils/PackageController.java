@@ -7,10 +7,13 @@
 package ru.yakimov.utils;
 
 public class PackageController extends ObjectPool<MyPackage>{
+    private int packNumber = 0;
+
 
     @Override
     protected MyPackage newObject() {
-        return new MyPackage();
+        packNumber++;
+        return new MyPackage(packNumber);
     }
 
 }

@@ -227,18 +227,20 @@ public class Connector {
 
 
     public void addToSend(ProtocolDataType type, Commands command, byte[] dataArr){
-        if(!connected.get())
+        if(!connected.get()) {
             connect();
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
-        MyPackage myPackage = packageController.getActiveElement();
-        myPackage.set(type, command.getString().getBytes(), dataArr);
-        queue.add(myPackage);
+        queue.add(
+                packageController
+                        .getActiveElement()
+                        .set(type, command.getString().getBytes(), dataArr)
+        );
     }
 
     public void setAndSendFile(Commands command, byte[] dataArr){

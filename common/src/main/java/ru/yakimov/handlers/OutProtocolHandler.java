@@ -6,7 +6,6 @@
 
 package ru.yakimov.handlers;
 
-import com.sun.tools.javac.code.Attribute;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;

@@ -160,22 +160,38 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
         System.out.println("----START FILE----------------");
 
-        myPackage.set(ProtocolDataType.FILE,Commands.START_FILE, fileName.getBytes());
-        ctx.write(myPackage);
+        ctx.write(
+                myPackage.set(ProtocolDataType.FILE,Commands.START_FILE, fileName.getBytes())
+        );
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         myPackage = packageController.getActiveElement();
 
         System.out.println("-------FILE---------");
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(file.toFile()))){
+
+            int packNumber = 0;
             int i = -1;
             while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
-                System.out.println("-------Pick FILE---------");
-                myPackage.trimDataArr(i);
-                myPackage.setType(ProtocolDataType.FILE);
-                myPackage.setCommandWithLength(Commands.FILE);
-                ctx.write(myPackage);
+                System.out.println("-------Pick FILE--------- Number" + ++packNumber);
+
+                ctx.write(
+                        myPackage.trimDataArr(i)
+                        .setType(ProtocolDataType.FILE)
+                        .setCommandWithLength(Commands.FILE)
+                );
                 myPackage = packageController.getActiveElement();
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
         } catch (IOException e) {
@@ -187,8 +203,8 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         ctx.write(myPackage);
 
         System.out.println("--------END SENDING-----------");
-
     }
+
 
     public void addDir(String data) throws SQLException {
         String [] dataArr = data.split(InProtocolHandler.DATA_DELIMITER,2);

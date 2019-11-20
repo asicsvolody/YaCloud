@@ -22,8 +22,6 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
     public static final String DATA_DELIMITER = " ";
     public static final String ROOT_DIR = "root/";
 
-//    ByteBufAllocator allocator ;
-
     private ByteBuf accumulator;
 
     private PackageController packageController = new PackageController();
@@ -33,7 +31,7 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
     private int reqLen = -1;
     private ProtocolDataType type = ProtocolDataType.EMPTY;
 
-    MyPackage myPackage;
+    private MyPackage myPackage;
 
     public InProtocolHandler() {
         System.out.println("InProtocolHandler created");
@@ -67,6 +65,8 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if(type.equals(ProtocolDataType.EMPTY)) {
                 System.err.println("Stage -1 error PACK is EMPTY");
+                myPackage.disable();
+                buf.release();
                  return;
             }
             myPackage.setType(type);
@@ -85,7 +85,6 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if (buf.readableBytes() < reqLen) {
                 System.err.println("Stage 0 error "+buf.readableBytes()+" < "+reqLen);
-
                 return;
             }
             reqLen = buf.readInt();
@@ -141,6 +140,7 @@ public class InProtocolHandler extends ChannelInboundHandlerAdapter {
 
             accumulator.writeBytes(buf);
 
+            System.out.println("Accumulator " + accumulator.readableBytes());
             if(accumulator.readableBytes() < reqLen){
                 buf.release();
                 return;

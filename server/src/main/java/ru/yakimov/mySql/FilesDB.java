@@ -107,16 +107,6 @@ public class FilesDB {
         }
     }
 
-//    private void deleteContent(String login, String dirName, String unitParent) {
-//        String directoryPath = unitParent + dirName + "/";
-//        String sql = String.format("DELETE FROM yaCloudDB.%s WHERE unit_parent LIKE %s",login, directoryPath+"%");
-//        try(Statement stmt = connection.createStatement()) {
-//            stmt.execute(sql);
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     private boolean isDirectory(String login, String unitName, String unitParent, String ext) {
         return !isFile(login,unitName,unitParent,ext);
     }

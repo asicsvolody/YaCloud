@@ -45,12 +45,13 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                 if(!Files.exists(file.getParent())){
                     Files.createDirectories(file.getParent());
                 }
+                Files.deleteIfExists(file);
+
                 Files.createFile(file);
 
                 System.out.println(file.getFileName());
 
                 parentDir = fileArr[1];
-                Files.deleteIfExists(file);
                 out = new BufferedOutputStream(new FileOutputStream(file.toFile(), true));
                 myPackage.disable();
                 break;

@@ -43,11 +43,12 @@ public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
                 if (!Files.exists(file.getParent())) {
                     Files.createDirectories(file.getParent());
                 }
+                Files.deleteIfExists(file);
+
                 Files.createFile(file);
 
                 System.out.println(file.getFileName());
 
-                Files.deleteIfExists(file);
                 out = new BufferedOutputStream(new FileOutputStream(file.toFile(), true));
                 break;
 

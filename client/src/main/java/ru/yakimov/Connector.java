@@ -154,7 +154,6 @@ public class Connector {
                 while(connected.get()){
                     MyPackage myPackage = queue.take();
                     f = channel.writeAndFlush(myPackage);
-
                     if(!channel.isOpen())
                         break;
                 }

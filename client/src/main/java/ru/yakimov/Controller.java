@@ -54,14 +54,6 @@ public class Controller {
 
         MyPackage myPackage = Connector.getInstance().getPackage();
 
-//        try {
-//            Thread.sleep(10000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
-
-
         try(BufferedInputStream in = new BufferedInputStream(new FileInputStream(selectedFile))){
             int i = -1;
             int packNumber = 0;

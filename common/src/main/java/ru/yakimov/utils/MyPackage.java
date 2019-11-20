@@ -31,10 +31,10 @@ public class MyPackage implements Poolable{
     private final Object[] dataObjArr;
 
     public MyPackage(int packageNumber) {
+        this.dataArr = new byte[InProtocolHandler.DATA_MAX_SIZE];
         this.packageNumber = packageNumber;
         this.dataObjArr = new Object[5];
-        this.dataArr = new byte[InProtocolHandler.DATA_MAX_SIZE];
-        dataObjArr[4] = dataArr;
+        this.isActive = false;
 
     }
 
@@ -56,7 +56,6 @@ public class MyPackage implements Poolable{
 
     public void enable(){
         dataObjArr[DATA] = dataArr;
-
         this.isActive = true;
     }
 
@@ -117,8 +116,8 @@ public class MyPackage implements Poolable{
     }
 
     public MyPackage setDataWithLength(byte[] data){
-        setDataLength(data.length);
         setData(data);
+        setDataLength(data.length);
         return this;
     }
 

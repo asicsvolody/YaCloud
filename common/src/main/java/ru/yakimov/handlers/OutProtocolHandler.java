@@ -28,7 +28,7 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
         MyPackage myPackage = ((MyPackage) msg);
 
         if(new String(myPackage.getCommandArr()).equals("startFile") || new String(myPackage.getCommandArr()).equals("file")){
-            System.out.println();
+            System.out.println(" Sending "+ new String(myPackage.getCommandArr()));
         }
 
         if(accumulator == null)

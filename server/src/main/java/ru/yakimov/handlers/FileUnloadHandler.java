@@ -73,7 +73,7 @@ public class FileUnloadHandler extends ChannelInboundHandlerAdapter {
                     System.err.println("Dif SIZe "+realLength +" AND "+fileLength);
                     ctx.pipeline()
                             .get(CommandHandler.class)
-                            .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength));
+                            .writeError(String.format("Error unloading file get %s send %s", realLength, fileLength), myPackage);
                     return;
                 }
                 String userDir = ctx.pipeline().get(CommandHandler.class).getUserDir();

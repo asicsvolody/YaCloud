@@ -23,7 +23,7 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        System.err.println("Получено задание на отправку");
+        System.err.println("OutProtocolHandler Получено задание на отправку");
 
         MyPackage myPackage = ((MyPackage) msg);
 
@@ -66,7 +66,7 @@ public class OutProtocolHandler extends ChannelOutboundHandlerAdapter {
         accumulator.clear();
 
 
-        System.out.println("Writable bites after "+ accumulator.readableBytes());
+        System.out.println("Writable bites after cleaning"+ accumulator.readableBytes());
 
         ctx.pipeline().get(InProtocolHandler.class).getPackageController().checkPool();
     }

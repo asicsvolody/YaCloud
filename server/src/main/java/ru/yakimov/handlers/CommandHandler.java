@@ -32,9 +32,12 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
     private MyPackage myPackage;
 
+    ChannelHandlerContext ctx;
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
+        this.ctx = ctx;
         myPackage = ((MyPackage) msg);
 
         Commands command;
@@ -62,7 +65,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
                 userDir = "./STORAGE/"+login+"/";
                 return;
             case DOWNLOAD_FILE:
-                sendFile(commandData, ctx);
+                sendFile(commandData);
                 return;
             case REFRESH:
             case GO_TO_DIR:
@@ -111,6 +114,16 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         myPackage.set(ProtocolDataType.COMMAND, Commands.ERROR, msg.getBytes());
     }
 
+    public void writeError(String msg, MyPackage myPackage){
+        if(ctx == null) {
+            myPackage.disable();
+            return;
+        }
+        myPackage.set(ProtocolDataType.COMMAND, Commands.ERROR, msg.getBytes());
+        ctx.write(myPackage);
+
+    }
+
 
 
     public void sendUnits(String parentDir) {
@@ -140,7 +153,7 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         ctx.write(myPackage);
     }
 
-    public void sendFile(String data, ChannelHandlerContext ctx) {
+    public void sendFile(String data) {
         System.out.println("---------SENDING FILE-----------");
 
         PackageController packageController = ctx.pipeline().get(InProtocolHandler.class).getPackageController();
@@ -154,13 +167,13 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
 
         if(Files.notExists(file)){
             writeError("FIle not exist:" + file);
-            ctx.write(myPackage);
+            ctx.writeAndFlush(myPackage);
             return;
         }
 
         System.out.println("----START FILE----------------");
 
-        ctx.write(
+        ctx.writeAndFlush(
                 myPackage.set(ProtocolDataType.FILE,Commands.START_FILE, fileName.getBytes())
         );
 
@@ -180,18 +193,19 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
             while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
                 System.out.println("-------Pick FILE--------- Number" + ++packNumber);
 
-                ctx.write(
+                ctx.writeAndFlush(
                         myPackage.trimDataArr(i)
                         .setType(ProtocolDataType.FILE)
                         .setCommandWithLength(Commands.FILE)
                 );
-                myPackage = packageController.getActiveElement();
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                myPackage = packageController.getActiveElement();
+
             }
 
         } catch (IOException e) {
@@ -199,8 +213,9 @@ public class CommandHandler extends ChannelInboundHandlerAdapter {
         }
 
         System.out.println("------END FILE ----------");
-        myPackage.set(ProtocolDataType.FILE, Commands.END_FILE, Longs.toByteArray(file.toFile().length()));
-        ctx.write(myPackage);
+
+        ctx.writeAndFlush(myPackage
+                .set(ProtocolDataType.FILE, Commands.END_FILE, Longs.toByteArray(file.toFile().length())));
 
         System.out.println("--------END SENDING-----------");
     }

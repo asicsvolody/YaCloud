@@ -145,7 +145,7 @@ public class MyPackage implements Poolable{
 
     public byte[] getDataArrForWrite(){
         dataObjArr[DATA] = dataArr;
-        return ((byte[]) dataObjArr[DATA]);
+        return dataArr;
     }
 
 
@@ -166,8 +166,8 @@ public class MyPackage implements Poolable{
     public MyPackage trimDataArr(int length){
 
         dataObjArr[DATA_LENGTH] = length;
-        if(length != ((byte[]) dataObjArr[DATA]).length)
-            dataObjArr[DATA] = Arrays.copyOf(((byte[]) dataObjArr[DATA]), length);
+        if(length != dataArr.length)
+            dataObjArr[DATA] = Arrays.copyOf(dataArr, length);
         return this;
 
     }

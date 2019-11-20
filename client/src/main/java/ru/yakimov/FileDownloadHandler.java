@@ -71,10 +71,7 @@ public class FileDownloadHandler extends ChannelInboundHandlerAdapter {
         }
         myPackage.disable();
     }
-
-
-
-
+    
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();

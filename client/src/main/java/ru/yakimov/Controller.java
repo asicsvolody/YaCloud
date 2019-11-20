@@ -61,6 +61,7 @@ public class Controller {
             while ((i = in.read(myPackage.getDataArrForWrite())) != -1){
                 packNumber++;
                 System.err.println("Send package "+ i + " num# "+packNumber);
+
                 Connector.getInstance()
                         .addToQueue(
                                 myPackage
